@@ -230,10 +230,37 @@ public class Accounting extends javax.swing.JFrame {
         }
     }
 
-    private void loadBudgets() {
+    private void loadBudgets(String filter) {
         try {
-            ResultSet resultSet = MySQL2.executeSearch("SELECT * FROM `homeowners`.budget_entries INNER JOIN `category` \n"
-                    + "ON `budget_entries`.category_id = `category`.id");
+            String query = "SELECT * FROM `homeowners`.budget_entries INNER JOIN `category` ON `budget_entries`.category_id = `category`.id";
+
+            // Adding sorting logic based on selected filter
+            switch (filter) {
+                case "Category Asc":
+                    query += " ORDER BY `category`.category ASC";
+                    break;
+                case "Category Desc":
+                    query += " ORDER BY `category`.category DESC";
+                    break;
+                case "Period Asc":
+                    query += " ORDER BY `budget_entries`.start_date ASC";
+                    break;
+                case "Period Desc":
+                    query += " ORDER BY `budget_entries`.start_date DESC";
+                    break;
+                case "Amount Asc":
+                    query += " ORDER BY `budget_entries`.amount ASC";
+                    break;
+                case "Amount Desc":
+                    query += " ORDER BY `budget_entries`.amount DESC";
+                    break;
+                case "Select":
+                default:
+                    // No additional ORDER BY clause needed
+                    break;
+            }
+
+            ResultSet resultSet = MySQL2.executeSearch(query);
 
             DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
             model.setRowCount(0);
@@ -249,7 +276,6 @@ public class Accounting extends javax.swing.JFrame {
                 vector.add(resultSet.getString("status"));
 
                 model.addRow(vector);
-
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -314,7 +340,7 @@ public class Accounting extends javax.swing.JFrame {
         loadPaymentMethod();
         generateReferenceNumber();
         loadBudgetCategory();
-        loadBudgets();
+        loadBudgets("Select");
         loadBarCharts();
         loadPieCharts();
     }
@@ -993,6 +1019,11 @@ public class Accounting extends javax.swing.JFrame {
         jButton5.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jButton5.setForeground(new java.awt.Color(255, 255, 255));
         jButton5.setText("Search");
+        jButton5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton5ActionPerformed(evt);
+            }
+        });
 
         jLabel18.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jLabel18.setForeground(new java.awt.Color(0, 0, 0));
@@ -2114,9 +2145,10 @@ public class Accounting extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this, "Reference number cannot be empty", "Warning", JOptionPane.WARNING_MESSAGE);
             } else if (notes == null || notes.trim().isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Notes cannot be empty", "Warning", JOptionPane.WARNING_MESSAGE);
-            } else if (receiptPath == null || receiptPath.trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please select a receipt", "Warning", JOptionPane.WARNING_MESSAGE);
-            } else {
+            } else// if (receiptPath == null || receiptPath.trim().isEmpty()) {
+            //JOptionPane.showMessageDialog(this, "Please select a receipt", "Warning", JOptionPane.WARNING_MESSAGE);
+            //} else 
+            {
 
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                 String formattedDate = dateFormat.format(date);
@@ -2143,10 +2175,10 @@ public class Accounting extends javax.swing.JFrame {
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE);
 
-         System.out.println(JOptionPane.YES_NO_OPTION);
-        
+        System.out.println(JOptionPane.YES_NO_OPTION);
+
         if (response == JOptionPane.YES_OPTION) {
-           
+
             clearLedgerEntries();
             generateReferenceNumber();
         }
@@ -2166,12 +2198,16 @@ public class Accounting extends javax.swing.JFrame {
                 String category = String.valueOf(jComboBox6.getSelectedItem());
                 String amount = jFormattedTextField3.getText();
                 String description = jTextArea2.getText();
+                Date endDate = jDateChooser15.getDate();
+
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                String endDateStr = dateFormat.format(endDate);
 
                 MySQL2.executeIUD("UPDATE `homeowners`.budget_entries SET \n"
-                        + "`category_id` = '" + budgetCategoryMap.get(category) + "', `amount` = '" + amount + "', `description` = '" + description + "', `status` = 'Active'\n"
-                        + "WHERE `id`='" + selectedRow + "'");
+                        + "`category_id` = '" + budgetCategoryMap.get(category) + "', `amount` = '" + amount + "', `description` = '" + description + "',"
+                                + " `status` = 'Active',`end_date`='" + endDateStr + "' WHERE `id`='" + selectedRow + "'");
 
-                loadBudgets();
+                loadBudgets("Select");
                 clearBudgetEntries();
 
             } catch (Exception e) {
@@ -2225,7 +2261,7 @@ public class Accounting extends javax.swing.JFrame {
 
                         MySQL2.executeIUD("INSERT INTO homeowners.budget_entries (category_id, amount, description, status, start_date, end_date) "
                                 + "VALUES ('" + budgetCategoryMap.get(category) + "', '" + amount + "', '" + description + "', 'Active', '" + startDateStr + "', '" + endDateStr + "')");
-                        loadBudgets();
+                        loadBudgets("Select");
                         clearBudgetEntries();
                     }
                 } catch (NumberFormatException e) {
@@ -2250,7 +2286,7 @@ public class Accounting extends javax.swing.JFrame {
                 String SelectedRow = String.valueOf(jTable2.getValueAt(row, 0));
 
                 MySQL2.executeIUD("DELETE FROM `homeowners`.budget_entries WHERE `id` = '" + SelectedRow + "'");
-                loadBudgets();
+                loadBudgets("Select");
                 clearBudgetEntries();
 
             } catch (Exception e) {
@@ -2374,7 +2410,7 @@ public class Accounting extends javax.swing.JFrame {
             Date end = dateFormat.parse(endDate);
             jDateChooser14.setDate(start);
             jDateChooser15.setDate(end);
-            
+
         } catch (ParseException e) {
             e.printStackTrace(); // Handle the exception appropriately
         }
@@ -2384,6 +2420,12 @@ public class Accounting extends javax.swing.JFrame {
         jComboBox6.setEnabled(false);
         jDateChooser14.setEnabled(false);
     }//GEN-LAST:event_jTable2MouseClicked
+
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+        // Search  Budget
+        String selectedFilter = String.valueOf(jComboBox8.getSelectedItem());
+        loadBudgets(selectedFilter);
+    }//GEN-LAST:event_jButton5ActionPerformed
 
     /**
      * @param args the command line arguments
