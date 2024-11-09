@@ -301,6 +301,28 @@ public class Accounting extends javax.swing.JFrame {
         }
     }
 
+    private void deactivateExistingBudgets(String category) {
+        try {
+            MySQL2.executeIUD("UPDATE homeowners.budget_entries SET status = 'Inactive'"
+                    + " WHERE category_id = '" + budgetCategoryMap.get(category) + "' AND status = 'Active'");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateBudgetTotal(int categoryId, double amount) {
+        try {
+            // Query using COALESCE to handle null values
+            String query = "UPDATE `homeowners`.budget_entries "
+                    + "SET `amount_spent` = COALESCE(`amount_spent`, 0) + " + amount
+                    + " WHERE `category_id` = " + categoryId + " AND `status` = 'Active'";
+            MySQL2.executeIUD(query);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private void loadBarCharts() {
         //bar chart 1 
         chart1.addLegend("Budget", new Color(255, 51, 0));
@@ -432,6 +454,9 @@ public class Accounting extends javax.swing.JFrame {
         jTable2 = new javax.swing.JTable();
         jPanel11 = new javax.swing.JPanel();
         jLabel15 = new javax.swing.JLabel();
+        jLabel9 = new javax.swing.JLabel();
+        jLabel47 = new javax.swing.JLabel();
+        jLabel48 = new javax.swing.JLabel();
         jPanel14 = new javax.swing.JPanel();
         jPanel16 = new javax.swing.JPanel();
         jScrollPane5 = new javax.swing.JScrollPane();
@@ -1108,7 +1133,19 @@ public class Accounting extends javax.swing.JFrame {
 
         jLabel15.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
         jLabel15.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel15.setText(" Alerts Section - Marketing budget overrun by $200");
+        jLabel15.setText("Budget Usage :");
+
+        jLabel9.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
+        jLabel9.setForeground(new java.awt.Color(0, 0, 0));
+        jLabel9.setText("100000000");
+
+        jLabel47.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
+        jLabel47.setForeground(new java.awt.Color(0, 0, 0));
+        jLabel47.setText("Remaining Amount:");
+
+        jLabel48.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
+        jLabel48.setForeground(new java.awt.Color(0, 0, 0));
+        jLabel48.setText("100000000");
 
         javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
         jPanel11.setLayout(jPanel11Layout);
@@ -1117,11 +1154,24 @@ public class Accounting extends javax.swing.JFrame {
             .addGroup(jPanel11Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel15)
+                .addGap(18, 18, 18)
+                .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(72, 72, 72)
+                .addComponent(jLabel47)
+                .addGap(18, 18, 18)
+                .addComponent(jLabel48, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel11Layout.setVerticalGroup(
             jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jLabel15, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(jPanel11Layout.createSequentialGroup()
+                .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel47)
+                        .addComponent(jLabel48, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jLabel15, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(0, 0, 0))
         );
 
         javax.swing.GroupLayout jPanel13Layout = new javax.swing.GroupLayout(jPanel13);
@@ -2145,17 +2195,17 @@ public class Accounting extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this, "Reference number cannot be empty", "Warning", JOptionPane.WARNING_MESSAGE);
             } else if (notes == null || notes.trim().isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Notes cannot be empty", "Warning", JOptionPane.WARNING_MESSAGE);
-            } else// if (receiptPath == null || receiptPath.trim().isEmpty()) {
-            //JOptionPane.showMessageDialog(this, "Please select a receipt", "Warning", JOptionPane.WARNING_MESSAGE);
-            //} else 
-            {
-
+            } else {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                 String formattedDate = dateFormat.format(date);
 
                 MySQL2.executeIUD("INSERT INTO `accounting_entries` (`date`,`description`,`amount`,`type_id`,`category_id`,`payment_methods_id`,`reference_no`,`notes`,`attached_receipt`)"
                         + "VALUES ('" + formattedDate + "','" + description + "','" + amount + "','" + transactionTypeMap.get(type) + "','" + transactionCategoryMap.get(category) + "','" + paymentMethodMap.get(paymentMethod) + "','" + referenceNo + "','"
                         + notes + "','" + receiptPath + "')");
+
+                // Update the budget after inserting the ledger entry
+                int categoryId = Integer.parseInt(transactionCategoryMap.get(category));
+                updateBudgetTotal(categoryId, Double.parseDouble(amount));
 
                 loadEntries();
                 clearLedgerEntries();
@@ -2205,7 +2255,7 @@ public class Accounting extends javax.swing.JFrame {
 
                 MySQL2.executeIUD("UPDATE `homeowners`.budget_entries SET \n"
                         + "`category_id` = '" + budgetCategoryMap.get(category) + "', `amount` = '" + amount + "', `description` = '" + description + "',"
-                                + " `status` = 'Active',`end_date`='" + endDateStr + "' WHERE `id`='" + selectedRow + "'");
+                        + " `status` = 'Active',`end_date`='" + endDateStr + "' WHERE `id`='" + selectedRow + "'");
 
                 loadBudgets("Select");
                 clearBudgetEntries();
@@ -2254,13 +2304,20 @@ public class Accounting extends javax.swing.JFrame {
                     } else if (description == null || description.isEmpty()) {
                         JOptionPane.showMessageDialog(this, "Please enter a description.");
                     } else {
+
+                        // Deactivate any existing active budgets for the same category 
+                        deactivateExistingBudgets(category);
+
                         // If all validations pass, execute the insert statement
                         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                         String startDateStr = dateFormat.format(startDate);
                         String endDateStr = dateFormat.format(endDate);
 
+                        // Setting status to Active
+                        String status = "Active";
+
                         MySQL2.executeIUD("INSERT INTO homeowners.budget_entries (category_id, amount, description, status, start_date, end_date) "
-                                + "VALUES ('" + budgetCategoryMap.get(category) + "', '" + amount + "', '" + description + "', 'Active', '" + startDateStr + "', '" + endDateStr + "')");
+                                + "VALUES ('" + budgetCategoryMap.get(category) + "', '" + amount + "', '" + description + "', '" + status + "', '" + startDateStr + "', '" + endDateStr + "')");
                         loadBudgets("Select");
                         clearBudgetEntries();
                     }
@@ -2393,6 +2450,7 @@ public class Accounting extends javax.swing.JFrame {
             return;
         }
 
+        String id = String.valueOf(jTable2.getValueAt(row, 0));
         String category = jTable2.getValueAt(row, 1) != null ? String.valueOf(jTable2.getValueAt(row, 1)) : "";
         String amount = jTable2.getValueAt(row, 2) != null ? String.valueOf(jTable2.getValueAt(row, 2)) : "";
         String description = jTable2.getValueAt(row, 3) != null ? String.valueOf(jTable2.getValueAt(row, 3)) : "";
@@ -2411,7 +2469,24 @@ public class Accounting extends javax.swing.JFrame {
             jDateChooser14.setDate(start);
             jDateChooser15.setDate(end);
 
-        } catch (ParseException e) {
+            ResultSet budgetUsage = MySQL2.executeSearch("SELECT `amount_spent` FROM budget_entries WHERE budget_entries.id ='" + id + "'");
+            if (budgetUsage.next()) {  // Check if there's a result
+                String amountSpent = budgetUsage.getString("amount_spent");  // Retrieve the amount_spent value
+
+                // Ensure both `amount` and `amountSpent` are not null or empty before parsing
+                if (amount != null && !amount.isEmpty() && amountSpent != null && !amountSpent.isEmpty()) {
+                    double amountVal = Double.parseDouble(amount);
+                    double amountSpentVal = Double.parseDouble(amountSpent);
+
+                    double remainingAmount = amountVal - amountSpentVal;
+
+                    jLabel9.setText(amountSpent);  // Set the text of jLabel9
+                    jLabel48.setText(String.valueOf(remainingAmount));
+                } else {
+                    jLabel48.setText("Invalid data");  // Handle if amount or amountSpent is null/empty
+                }
+            }
+        } catch (Exception e) {
             e.printStackTrace(); // Handle the exception appropriately
         }
 
@@ -2548,10 +2623,13 @@ public class Accounting extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel44;
     private javax.swing.JLabel jLabel45;
     private javax.swing.JLabel jLabel46;
+    private javax.swing.JLabel jLabel47;
+    private javax.swing.JLabel jLabel48;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel10;
     private javax.swing.JPanel jPanel11;
