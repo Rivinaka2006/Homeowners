@@ -1,0 +1,421 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JDialog.java to edit this template
+ */
+package gui;
+
+import java.awt.Image;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import model.MySQL;
+import java.sql.ResultSet;
+
+/**
+ *
+ * @author User
+ */
+public class Images extends javax.swing.JDialog {
+
+    private static String NICImage1;
+    private static String NICImage2;
+    private static String Profile;
+
+    /**
+     * Creates new form Images
+     */
+    public Images(java.awt.Frame parent, boolean modal, String NIC, String uid) {
+        super(parent, modal);
+        initComponents();
+        jLabel8.setText(NIC);
+        jLabel9.setText(uid);
+        loadImages();
+    }
+
+    public static String getFileExtension(File file) {
+        String fileName = file.getName();
+        int dotIndex = fileName.lastIndexOf(".");
+        return (dotIndex == -1) ? "" : fileName.substring(dotIndex);
+    }
+
+    private void loadImages() {
+        try {
+            ResultSet rs = MySQL.executeSearch("SELECT * FROM `employeeimage` WHERE `user_id` = '" + jLabel9.getText() + "'");
+            if (rs.next()) {
+                NICImage1 = rs.getString("nic_path");
+                System.out.println(NICImage1);
+                NICImage2 = rs.getString("nic_path2");
+                Profile = rs.getString("profile_img");
+                jButton4.setEnabled(false);
+                if (NICImage1 != null) {
+                    ImageIcon imageIcon = new ImageIcon(NICImage1);
+                    Image image = imageIcon.getImage(); // Get the image
+                    Image resizedImage = image.getScaledInstance(jLabel2.getWidth(), jLabel2.getHeight(), Image.SCALE_SMOOTH); // Resize
+                    imageIcon = new ImageIcon(resizedImage); // Update the ImageIcon
+                    jLabel2.setIcon(imageIcon);
+
+                }
+                if (NICImage2 != null) {
+                    ImageIcon imageIcon = new ImageIcon(NICImage2);
+                    Image image = imageIcon.getImage(); // Get the image
+                    Image resizedImage = image.getScaledInstance(jLabel3.getWidth(), jLabel3.getHeight(), Image.SCALE_SMOOTH); // Resize
+                    imageIcon = new ImageIcon(resizedImage); // Update the ImageIcon
+                    jLabel3.setIcon(imageIcon);
+
+                }
+                if (Profile != null) {
+                    ImageIcon imageIcon = new ImageIcon(Profile);
+                    Image image = imageIcon.getImage(); // Get the image
+                    Image resizedImage = image.getScaledInstance(jLabel4.getWidth(), jLabel4.getHeight(), Image.SCALE_SMOOTH); // Resize
+                    imageIcon = new ImageIcon(resizedImage); // Update the ImageIcon
+                    jLabel4.setIcon(imageIcon);
+
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String addNICimage(String i, String name) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setMultiSelectionEnabled(true);
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
+            public boolean accept(File f) {
+                String fileName = f.getName().toLowerCase();
+                return f.isDirectory() || fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png");
+            }
+
+            public String getDescription() {
+                return "Image files (.jpg, .jpeg, .png)";
+            }
+        });
+        int result = fileChooser.showOpenDialog(null);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            String saveDirectory = "Employee_NICimages/";
+            new File(saveDirectory).mkdirs();
+            String extension = getFileExtension(selectedFile);
+            String newFileName = saveDirectory + name + "-" + i + extension;
+            File newFile = new File(newFileName);
+            try {
+                Files.copy(selectedFile.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                String imagePath = newFileName;
+
+                return imagePath;
+            } catch (IOException e) {
+                System.out.println("Error saving image: " + newFileName);
+                e.printStackTrace();
+            }
+
+        } else {
+            System.out.println("error");
+            return null;
+        }
+        return null;
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jPanel1 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
+        jButton3 = new javax.swing.JButton();
+        jButton4 = new javax.swing.JButton();
+        jLabel8 = new javax.swing.JLabel();
+        jLabel9 = new javax.swing.JLabel();
+        jButton5 = new javax.swing.JButton();
+        jButton7 = new javax.swing.JButton();
+        jButton9 = new javax.swing.JButton();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+
+        jLabel1.setFont(new java.awt.Font("Yu Gothic UI", 0, 24)); // NOI18N
+        jLabel1.setText("NIC / Profile Image");
+
+        jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/card (1).png"))); // NOI18N
+
+        jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/credit-card.png"))); // NOI18N
+
+        jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/user.png"))); // NOI18N
+
+        jLabel5.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jLabel5.setText("NIC Front Side");
+
+        jLabel6.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jLabel6.setText("NIC Back Side");
+
+        jLabel7.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jLabel7.setText("Profile Image");
+
+        jButton3.setText("Update");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+
+        jButton4.setText("Add");
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
+
+        jLabel8.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jLabel8.setText("NIC Number");
+
+        jLabel9.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jLabel9.setText("UId");
+
+        jButton5.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/plus (1).png"))); // NOI18N
+        jButton5.setRolloverIcon(new javax.swing.ImageIcon(getClass().getResource("/img/plus.png"))); // NOI18N
+        jButton5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton5ActionPerformed(evt);
+            }
+        });
+
+        jButton7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/plus (1).png"))); // NOI18N
+        jButton7.setRolloverIcon(new javax.swing.ImageIcon(getClass().getResource("/img/plus.png"))); // NOI18N
+        jButton7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton7ActionPerformed(evt);
+            }
+        });
+
+        jButton9.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/plus (1).png"))); // NOI18N
+        jButton9.setRolloverIcon(new javax.swing.ImageIcon(getClass().getResource("/img/plus.png"))); // NOI18N
+        jButton9.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton9ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(20, 20, 20)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel7)
+                        .addContainerGap())
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel5)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 289, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton5, javax.swing.GroupLayout.DEFAULT_SIZE, 58, Short.MAX_VALUE)))
+                        .addGap(33, 33, 33)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel6)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 289, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(4, 4, 4)
+                                .addComponent(jButton7, javax.swing.GroupLayout.DEFAULT_SIZE, 58, Short.MAX_VALUE)
+                                .addGap(187, 187, 187))))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 438, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton9, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jButton4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jButton3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addGap(38, 38, 38))))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(30, 30, 30)
+                        .addComponent(jLabel1)
+                        .addGap(32, 32, 32))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jLabel9)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel8)
+                        .addGap(19, 19, 19)))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel5)
+                    .addComponent(jLabel6))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButton5)
+                    .addComponent(jButton7)
+                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel7)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 315, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(28, 28, 28)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jButton9)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                .addGap(21, 21, 21))
+        );
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+
+        pack();
+        setLocationRelativeTo(null);
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        // TODO add your handling code here:
+        if (NICImage1 == null) {
+            JOptionPane.showMessageDialog(this, "Please select NIC front side image", "Warning", JOptionPane.WARNING_MESSAGE);
+        } else if (NICImage2 == null) {
+            JOptionPane.showMessageDialog(this, "Please select NIC back side image", "Warning", JOptionPane.WARNING_MESSAGE);
+        } else if (Profile == null) {
+            JOptionPane.showMessageDialog(this, "Please select profile image", "Warning", JOptionPane.WARNING_MESSAGE);
+        } else {
+            try {
+                int result = JOptionPane.showConfirmDialog(this, "Do you want update above images", "information", JOptionPane.YES_NO_OPTION);
+                if (result == 0) {
+                    MySQL.executeIUD("UPDATE `employeeimage` SET `nic_path` = '"+NICImage1+"',`nic_path2` = '"+NICImage2+"',`profile_img` = '"+Profile+"' WHERE `user_id` = '"+jLabel9.getText()+"'");
+               JOptionPane.showMessageDialog(this,"Update Successfully", "Success",JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_jButton3ActionPerformed
+
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+        // TODO add your handling code here:
+
+        if (NICImage1 == null) {
+            JOptionPane.showMessageDialog(this, "Please select NIC front side image", "Warning", JOptionPane.WARNING_MESSAGE);
+        } else if (NICImage2 == null) {
+            JOptionPane.showMessageDialog(this, "Please select NIC back side image", "Warning", JOptionPane.WARNING_MESSAGE);
+        } else if (Profile == null) {
+            JOptionPane.showMessageDialog(this, "Please select profile image", "Warning", JOptionPane.WARNING_MESSAGE);
+        } else {
+            try {
+                MySQL.executeIUD("INSERT INTO `employeeimage` (`nic_path`,`nic_path2`,`profile_img`,`user_id`) VALUES('" + NICImage1 + "','" + NICImage2 + "','" + Profile + "','" + jLabel9.getText() + "')");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_jButton4ActionPerformed
+
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+        // TODO add your handling code here:
+        String imagepath = addNICimage("1-"+jLabel9.getText(), "NIC");
+        if (imagepath == null) {
+            JOptionPane.showMessageDialog(this, "Employee Nic image 1 has not selected!", "Warning", JOptionPane.WARNING_MESSAGE);
+        } else {
+            NICImage1 = imagepath;
+            ImageIcon imageIcon = new ImageIcon(imagepath);
+            Image image = imageIcon.getImage(); // Get the image
+            Image resizedImage = image.getScaledInstance(jLabel2.getWidth(), jLabel2.getHeight(), Image.SCALE_SMOOTH); // Resize
+            imageIcon = new ImageIcon(resizedImage); // Update the ImageIcon
+            jLabel2.setIcon(imageIcon);
+        }
+
+    }//GEN-LAST:event_jButton5ActionPerformed
+
+    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+        // TODO add your handling code here:
+        String imagepath = addNICimage("2-"+jLabel9.getText(), "NIC");
+        if (imagepath == null) {
+            JOptionPane.showMessageDialog(this, "Employee Nic image 2 has not selected!", "Warning", JOptionPane.WARNING_MESSAGE);
+        } else {
+            NICImage2 = imagepath;
+            ImageIcon imageIcon = new ImageIcon(imagepath);
+            Image image = imageIcon.getImage(); // Get the image
+            Image resizedImage = image.getScaledInstance(jLabel3.getWidth(), jLabel3.getHeight(), Image.SCALE_SMOOTH); // Resize
+            imageIcon = new ImageIcon(resizedImage); // Update the ImageIcon
+            jLabel3.setIcon(imageIcon);
+        }
+    }//GEN-LAST:event_jButton7ActionPerformed
+
+    private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
+        // TODO add your handling code here:
+        String imagepath = addNICimage(jLabel9.getText(), "ProfileImage");
+        if (imagepath == null) {
+            JOptionPane.showMessageDialog(this, "Employee Profile image has not selected!", "Warning", JOptionPane.WARNING_MESSAGE);
+        } else {
+            Profile = imagepath;
+            ImageIcon imageIcon = new ImageIcon(imagepath);
+            Image image = imageIcon.getImage(); // Get the image
+            Image resizedImage = image.getScaledInstance(jLabel4.getWidth(), jLabel4.getHeight(), Image.SCALE_SMOOTH); // Resize
+            imageIcon = new ImageIcon(resizedImage); // Update the ImageIcon
+            jLabel4.setIcon(imageIcon);
+        }
+    }//GEN-LAST:event_jButton9ActionPerformed
+
+    /**
+     * @param args the command line arguments
+     */
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButton4;
+    private javax.swing.JButton jButton5;
+    private javax.swing.JButton jButton7;
+    private javax.swing.JButton jButton9;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
+    private javax.swing.JPanel jPanel1;
+    // End of variables declaration//GEN-END:variables
+}
