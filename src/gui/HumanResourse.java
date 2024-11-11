@@ -62,7 +62,7 @@ public class HumanResourse extends javax.swing.JFrame {
         pieChart1.addData(new ModelPieChart("Coca", 1, new Color(47, 157, 64)));
         pieChart1.addData(new ModelPieChart("Vita", 60, new Color(196, 151, 58)));
     }
-    
+    ///////////////kkkkk
     private void genareteSalaryId() {
         long id = System.currentTimeMillis();
         jTextField8.setText(String.valueOf(id));
