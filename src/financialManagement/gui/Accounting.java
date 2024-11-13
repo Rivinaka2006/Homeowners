@@ -16,12 +16,21 @@ import java.sql.ResultSet;
 import javax.swing.JFileChooser;
 import java.io.File;
 import java.io.IOException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.Vector;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -44,6 +53,36 @@ public class Accounting extends javax.swing.JFrame {
     private static HashMap<String, String> transactionCategoryMap = new HashMap<>();
     private static HashMap<String, String> paymentMethodMap = new HashMap<>();
     private static HashMap<String, Integer> budgetCategoryMap = new HashMap<>();
+
+    public void scheduleBudgetDeactivation() {
+
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+        Runnable task = new Runnable() {
+            @Override
+            public void run() {
+                deactivateExpiredBudgets();
+                //Set the budget usage and the remaining amount to default value
+                jLabel9.setText("0");
+                jLabel48.setText("0");
+            }
+        };
+
+        // Schedule the task to run daily at midnight
+        long initialDelay = calculateInitialDelay();  // Method to calculate the delay until midnight
+        long period = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+        //scheduler.scheduleAtFixedRate(task, initialDelay, period, TimeUnit.MILLISECONDS);
+        scheduler.scheduleAtFixedRate(task, 0, 60, TimeUnit.SECONDS); // Run every 60 seconds for testing
+    }
+
+// Method to calculate the initial delay until midnight
+    private long calculateInitialDelay() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime midnight = now.plusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        long initialDelay = Duration.between(now, midnight).toMillis();
+        return initialDelay;
+    }
 
     private void responsive() {
         setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -236,12 +275,6 @@ public class Accounting extends javax.swing.JFrame {
 
             // Adding sorting logic based on selected filter
             switch (filter) {
-                case "Category Asc":
-                    query += " ORDER BY `category`.category ASC";
-                    break;
-                case "Category Desc":
-                    query += " ORDER BY `category`.category DESC";
-                    break;
                 case "Period Asc":
                     query += " ORDER BY `budget_entries`.start_date ASC";
                     break;
@@ -253,6 +286,12 @@ public class Accounting extends javax.swing.JFrame {
                     break;
                 case "Amount Desc":
                     query += " ORDER BY `budget_entries`.amount DESC";
+                    break;
+                case "Active":
+                    query += " WHERE `budget_entries`.status = 'Active'";
+                    break;
+                case "Inactive":
+                    query += " WHERE `budget_entries`.status = 'Inactive'";
                     break;
                 case "Select":
                 default:
@@ -310,6 +349,44 @@ public class Accounting extends javax.swing.JFrame {
         }
     }
 
+    private void deactivateExpiredBudgets() {
+
+        try {
+            String currentDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+
+            // SQL query to update the status to 'Inactive' where the end date has passed
+            String query = "UPDATE `homeowners`.budget_entries "
+                    + "SET `status` = 'Inactive' "
+                    + "WHERE `end_date` < '" + currentDate + "' AND `status` = 'Active'";
+
+            MySQL2.executeIUD(query);
+            loadBudgets(query);
+
+        } catch (Exception e) {
+            System.err.println("Error deactivating expired budgets: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public void checkBudgetExceeding() {
+        try {
+            String query = "SELECT category, amount, COALESCE(amount_spent, 0) as amount_spent FROM homeowners.budget_entries \n"
+                    + "INNER JOIN `category` ON `budget_entries`.category_id = `category`.id WHERE status = 'Active'";
+            ResultSet resultSet = MySQL2.executeSearch(query);
+            while (resultSet.next()) {
+                String category = resultSet.getString("category");
+                double budgetAmount = resultSet.getDouble("amount");
+                double amountSpent = resultSet.getDouble("amount_spent");
+
+                if (amountSpent > budgetAmount) {
+                    System.out.println("Budget for " + category + " has been exceeded. Budget: " + budgetAmount + ", Spent: " + amountSpent);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private void updateBudgetTotal(int categoryId, double amount) {
         try {
             // Query using COALESCE to handle null values
@@ -323,16 +400,93 @@ public class Accounting extends javax.swing.JFrame {
         }
     }
 
-    private void loadBarCharts() {
-        //bar chart 1 
+    private Map<String, double[]> fetchMonthlyBudgetVsActualData() {
+        Map<String, double[]> monthlyData = new HashMap<>();
+        try {
+            // Fetch budgets and transactions
+            String budgetQuery = "SELECT start_date, end_date, amount, category_id FROM homeowners.budget_entries WHERE status = 'Active'";
+            ResultSet budgetResultSet = MySQL2.executeSearch(budgetQuery);
+
+            while (budgetResultSet.next()) {
+                LocalDate startDate = budgetResultSet.getDate("start_date").toLocalDate();
+                LocalDate endDate = budgetResultSet.getDate("end_date").toLocalDate();
+                double budgetAmount = budgetResultSet.getDouble("amount");
+                int categoryId = budgetResultSet.getInt("category_id");
+
+                // Calculate months in budget period
+                long totalMonths = ChronoUnit.MONTHS.between(startDate.withDayOfMonth(1), endDate.withDayOfMonth(1)) + 1;
+
+                LocalDate currentMonth = startDate.withDayOfMonth(1);
+                while (!currentMonth.isAfter(endDate.withDayOfMonth(1))) {
+                    String monthKey = currentMonth.getMonth().name() + " " + currentMonth.getYear();
+                    monthlyData.putIfAbsent(monthKey, new double[]{0, 0});
+                    monthlyData.get(monthKey)[0] += budgetAmount / totalMonths;
+                    currentMonth = currentMonth.plusMonths(1);
+                }
+            }
+
+            // Fetch transactions which are debited
+            String transactionQuery = "SELECT date, amount, category_id FROM homeowners.accounting_entries WHERE type_id = '2'";
+            ResultSet transactionResultSet = MySQL2.executeSearch(transactionQuery);
+            while (transactionResultSet.next()) {
+                LocalDate transactionDate = transactionResultSet.getDate("date").toLocalDate();
+                double transactionAmount = transactionResultSet.getDouble("amount");
+                int transCategoryId = transactionResultSet.getInt("category_id");
+
+                String monthKey = transactionDate.getMonth().name() + " " + transactionDate.getYear();
+                if (monthlyData.containsKey(monthKey) && monthlyData.get(monthKey)[0] > 0) {
+                    monthlyData.get(monthKey)[1] += transactionAmount; // Track actual usage
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return monthlyData;
+    }
+
+    public void updateBudgetChart() {
+        //chart1.clearData(); // Clear existing data if needed
+        Map<String, double[]> monthlyData = fetchMonthlyBudgetVsActualData();
+
+        // Define legends if not already defined
         chart1.addLegend("Budget", new Color(255, 51, 0));
         chart1.addLegend("Actual", new Color(255, 102, 51));
-        chart1.addData(new ModelChart("January", new double[]{450, 720, 60, 130}));
-        chart1.addData(new ModelChart("February", new double[]{600, 750, 90, 150}));
-        chart1.addData(new ModelChart("March", new double[]{200, 350, 460, 900}));
-        chart1.addData(new ModelChart("April", new double[]{480, 150, 750, 700}));
-        chart1.addData(new ModelChart("May", new double[]{350, 540, 300, 150}));
-        chart1.addData(new ModelChart("June", new double[]{190, 280, 81, 200}));
+
+        // Add data to the chart
+        for (Map.Entry<String, double[]> entry : monthlyData.entrySet()) {
+            String month = entry.getKey();
+            double[] values = entry.getValue();
+            System.out.println("Month: " + month + ", Values: " + Arrays.toString(values));
+            if (values.length != 2) {
+                System.out.println("Invalid data for month: " + month + " with values: " + Arrays.toString(values));
+            } else {
+                chart1.addData(new ModelChart(month, values));
+            }
+        }
+
+        // Optionally, refresh the chart display
+        chart1.repaint();
+    }
+
+    private void setBudgetStartDate() {
+        // Set jDateChooser14 to today's date and disable it
+        Calendar calendar = Calendar.getInstance();
+        Date today = calendar.getTime();
+        jDateChooser14.setDate(today);
+        jDateChooser14.setEnabled(false);
+    }
+
+    private void loadBarCharts() {
+        //bar chart 1 
+        //chart1.addLegend("Budget", new Color(255, 51, 0));
+        //chart1.addLegend("Actual", new Color(255, 102, 51));
+        //chart1.addData(new ModelChart("January", new double[]{450, 720, 60, 130}));
+        //chart1.addData(new ModelChart("February", new double[]{600, 750, 90, 150}));
+        //chart1.addData(new ModelChart("March", new double[]{200, 350, 460, 900}));
+        //chart1.addData(new ModelChart("April", new double[]{480, 150, 750, 700}));
+        //chart1.addData(new ModelChart("May", new double[]{350, 540, 300, 150}));
+        //chart1.addData(new ModelChart("June", new double[]{190, 280, 81, 200}));
         //bar chart 2
         chart2.addLegend("Total Audits", new Color(255, 51, 0));
         chart2.addLegend("Compliance Status", new Color(255, 165, 0));
@@ -365,6 +519,7 @@ public class Accounting extends javax.swing.JFrame {
         loadBudgets("Select");
         loadBarCharts();
         loadPieCharts();
+        setBudgetStartDate();
     }
 
     private void initData() {
@@ -1054,7 +1209,7 @@ public class Accounting extends javax.swing.JFrame {
         jLabel18.setForeground(new java.awt.Color(0, 0, 0));
         jLabel18.setText("Filter");
 
-        jComboBox8.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Select", "Category Asc", "Category Desc", "Period Asc", "Period Desc", "Amount Asc", "Amount Desc" }));
+        jComboBox8.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Select", "Active", "Inactive", "Period Asc", "Period Desc", "Amount Asc", "Amount Desc" }));
 
         jLabel13.setFont(new java.awt.Font("Dialog", 1, 24)); // NOI18N
         jLabel13.setForeground(new java.awt.Color(0, 0, 0));
@@ -1137,7 +1292,7 @@ public class Accounting extends javax.swing.JFrame {
 
         jLabel9.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
         jLabel9.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel9.setText("100000000");
+        jLabel9.setText("0");
 
         jLabel47.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
         jLabel47.setForeground(new java.awt.Color(0, 0, 0));
@@ -1145,7 +1300,7 @@ public class Accounting extends javax.swing.JFrame {
 
         jLabel48.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
         jLabel48.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel48.setText("100000000");
+        jLabel48.setText("0");
 
         javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
         jPanel11.setLayout(jPanel11Layout);
@@ -2210,6 +2365,7 @@ public class Accounting extends javax.swing.JFrame {
                 loadEntries();
                 clearLedgerEntries();
                 generateReferenceNumber();
+                checkBudgetExceeding();
             }
 
         } catch (Exception e) {
@@ -2252,14 +2408,18 @@ public class Accounting extends javax.swing.JFrame {
 
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                 String endDateStr = dateFormat.format(endDate);
+                String status = String.valueOf(jTable2.getValueAt(row, 6));
 
-                MySQL2.executeIUD("UPDATE `homeowners`.budget_entries SET \n"
-                        + "`category_id` = '" + budgetCategoryMap.get(category) + "', `amount` = '" + amount + "', `description` = '" + description + "',"
-                        + " `status` = 'Active',`end_date`='" + endDateStr + "' WHERE `id`='" + selectedRow + "'");
+                if (!"Active".equals(status)) {
+                    JOptionPane.showMessageDialog(this, "Cannot Update Budget is Inactive", "Warning", JOptionPane.WARNING_MESSAGE);
+                } else {
+                    MySQL2.executeIUD("UPDATE `homeowners`.budget_entries SET \n"
+                            + "`category_id` = '" + budgetCategoryMap.get(category) + "', `amount` = '" + amount + "', `description` = '" + description + "',"
+                            + " `status` = 'Active',`end_date`='" + endDateStr + "' WHERE `id`='" + selectedRow + "'");
 
-                loadBudgets("Select");
-                clearBudgetEntries();
-
+                    loadBudgets("Select");
+                    clearBudgetEntries();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -2277,10 +2437,12 @@ public class Accounting extends javax.swing.JFrame {
         if (response == JOptionPane.YES_OPTION) {
             clearBudgetEntries();
         }
+        setBudgetStartDate();
     }//GEN-LAST:event_jButton7ActionPerformed
 
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
         // Save Budget
+
         try {
             String category = String.valueOf(jComboBox6.getSelectedItem());
             String amount = jFormattedTextField3.getText();
@@ -2340,15 +2502,31 @@ public class Accounting extends javax.swing.JFrame {
 
             try {
                 int row = jTable2.getSelectedRow();
-                String SelectedRow = String.valueOf(jTable2.getValueAt(row, 0));
+                if (row == -1) {
+                    JOptionPane.showMessageDialog(this, "No row selected", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
 
-                MySQL2.executeIUD("DELETE FROM `homeowners`.budget_entries WHERE `id` = '" + SelectedRow + "'");
-                loadBudgets("Select");
-                clearBudgetEntries();
+                String selectedRow = String.valueOf(jTable2.getValueAt(row, 0));
+
+                // Show a confirmation dialog
+                int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this entry?",
+                        "Confirm Delete", JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE);
+
+                // If the user confirms, proceed with deletion
+                if (confirm == JOptionPane.YES_OPTION) {
+                    MySQL2.executeIUD("DELETE FROM `homeowners`.budget_entries WHERE `id` = '" + selectedRow + "'");
+                    loadBudgets("Select");
+                    clearBudgetEntries();
+                    JOptionPane.showMessageDialog(this, "Entry deleted successfully.", "Deleted", JOptionPane.INFORMATION_MESSAGE);
+                }
 
             } catch (Exception e) {
                 e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "An error occurred while deleting the entry.", "Error", JOptionPane.ERROR_MESSAGE);
             }
+
         }
     }//GEN-LAST:event_jButton9ActionPerformed
 
@@ -2469,19 +2647,32 @@ public class Accounting extends javax.swing.JFrame {
             jDateChooser14.setDate(start);
             jDateChooser15.setDate(end);
 
-            ResultSet budgetUsage = MySQL2.executeSearch("SELECT `amount_spent` FROM budget_entries WHERE budget_entries.id ='" + id + "'");
+            ResultSet budgetUsage = MySQL2.executeSearch("SELECT `amount_spent` , `amount` FROM budget_entries WHERE budget_entries.id ='" + id + "'");
             if (budgetUsage.next()) {  // Check if there's a result
                 String amountSpent = budgetUsage.getString("amount_spent");  // Retrieve the amount_spent value
+                String budgetAmount = budgetUsage.getString("amount");
 
                 // Ensure both `amount` and `amountSpent` are not null or empty before parsing
                 if (amount != null && !amount.isEmpty() && amountSpent != null && !amountSpent.isEmpty()) {
-                    double amountVal = Double.parseDouble(amount);
+                    double budgetAmountVal = Double.parseDouble(budgetAmount);
                     double amountSpentVal = Double.parseDouble(amountSpent);
 
-                    double remainingAmount = amountVal - amountSpentVal;
+                    double remainingAmount = budgetAmountVal - amountSpentVal;
+                    double positiveRemainingAmount = Math.abs(remainingAmount);  //convert the negative remaining amount to positive
+                    double usagePercentage = (amountSpentVal / budgetAmountVal) * 100; //Calculate the budget as a percentage
+                    
+                    String usagePercentageStr = String.format("%.2f", usagePercentage); //turn the calculated percentage to string
 
-                    jLabel9.setText(amountSpent);  // Set the text of jLabel9
+                    jLabel9.setText(usagePercentageStr+" "+"%");  // Set the text of budget 
                     jLabel48.setText(String.valueOf(remainingAmount));
+
+                    if (remainingAmount < 0) {
+                        jLabel47.setText("Limit Exceed By");
+                        jLabel48.setText(String.valueOf(positiveRemainingAmount));
+                    } else {
+                        jLabel47.setText("Remaining Amount:");
+                    }
+
                 } else {
                     jLabel48.setText("Invalid data");  // Handle if amount or amountSpent is null/empty
                 }
@@ -2513,7 +2704,13 @@ public class Accounting extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Accounting().setVisible(true);
+                Accounting accounting = new Accounting();
+                accounting.setVisible(true);
+
+                // Schedule the budget deactivation task
+                accounting.scheduleBudgetDeactivation();
+                accounting.updateBudgetChart();
+
             }
         });
     }
