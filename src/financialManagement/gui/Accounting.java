@@ -16,14 +16,12 @@ import java.sql.ResultSet;
 import javax.swing.JFileChooser;
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -42,6 +40,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import model.MySQL2;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  *
@@ -62,6 +62,7 @@ public class Accounting extends javax.swing.JFrame {
             @Override
             public void run() {
                 deactivateExpiredBudgets();
+                loadIncomeStatements();
                 //Set the budget usage and the remaining amount to default value
                 jLabel9.setText("0");
                 jLabel48.setText("0");
@@ -445,6 +446,75 @@ public class Accounting extends javax.swing.JFrame {
         return monthlyData;
     }
 
+    public Date getStartDate() {
+        return jDateChooser1.getDate();
+    }
+
+    public Date getEndDate() {
+        return jDateChooser3.getDate();
+    }
+
+    public void loadIncomeStatements() {
+        Date startDate = jDateChooser1.getDate();
+        Date endDate = jDateChooser3.getDate();
+
+        // Check if dates are set, and convert them to SQL format if they are
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String startDateStr = (startDate != null) ? "'" + sdf.format(startDate) + "'" : "NULL";
+        String endDateStr = (endDate != null) ? "'" + sdf.format(endDate) + "'" : "NULL";
+
+        try {
+            // Modify the queries to include the date filter
+            String revenueQuery = "SELECT `amount` FROM `accounting_entries` WHERE `type_id`='1'"
+                    + (startDate != null && endDate != null ? " AND `date` BETWEEN " + startDateStr + " AND " + endDateStr : "");
+            String expenseQuery = "SELECT `amount` FROM `accounting_entries` WHERE `type_id`='2'"
+                    + (startDate != null && endDate != null ? " AND `date` BETWEEN " + startDateStr + " AND " + endDateStr : "");
+            String netIncomeQuery = "SELECT "
+                    + "    (SELECT SUM(`amount`) FROM `accounting_entries` WHERE `type_id` = '1'"
+                    + (startDate != null && endDate != null ? " AND `date` BETWEEN " + startDateStr + " AND " + endDateStr : "")
+                    + "    ) - "
+                    + "    (SELECT SUM(`amount`) FROM `accounting_entries` WHERE `type_id` = '2'"
+                    + (startDate != null && endDate != null ? " AND `date` BETWEEN " + startDateStr + " AND " + endDateStr : "")
+                    + ") AS `net_income`";
+
+            ResultSet result = MySQL2.executeSearch(revenueQuery);
+            ResultSet result1 = MySQL2.executeSearch(expenseQuery);
+            ResultSet result2 = MySQL2.executeSearch(netIncomeQuery);
+
+            DefaultTableModel model = (DefaultTableModel) jTable3.getModel();
+            model.setRowCount(0);
+
+            // Populate row-by-row for revenue and expense entries
+            while (result.next() && result1.next()) {
+                Vector<String> vector = new Vector<>();
+                String revenueAmount = result.getString("amount");
+                String expenseAmount = result1.getString("amount");
+                String netIncome = String.valueOf(Double.parseDouble(revenueAmount) - Double.parseDouble(expenseAmount));
+
+                vector.add(revenueAmount); // Revenue
+                vector.add(expenseAmount); // Expenses
+                vector.add(netIncome); // Row-wise Net Income (Revenue - Expenses)
+                model.addRow(vector);
+            }
+
+            // Display total net income at the bottom of the table, if needed
+            if (result2.next()) {
+                String totalNetIncome = result2.getString("net_income");
+                Vector<String> totalNetIncomeRow = new Vector<>();
+                totalNetIncomeRow.add("Total"); // Or any label you prefer
+                totalNetIncomeRow.add(""); // Empty cell for alignment
+                totalNetIncomeRow.add(totalNetIncome); // Total Net Income
+                model.addRow(totalNetIncomeRow);
+
+                // Optionally, display total net income in a separate label
+                // myNetIncomeLabel.setText("Net Income: " + totalNetIncome);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void updateBudgetChart() {
         //chart1.clearData(); // Clear existing data if needed
         Map<String, double[]> monthlyData = fetchMonthlyBudgetVsActualData();
@@ -520,6 +590,7 @@ public class Accounting extends javax.swing.JFrame {
         loadBarCharts();
         loadPieCharts();
         setBudgetStartDate();
+        loadIncomeStatements();
     }
 
     private void initData() {
@@ -1383,6 +1454,11 @@ public class Accounting extends javax.swing.JFrame {
         jButton14.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jButton14.setForeground(new java.awt.Color(255, 255, 255));
         jButton14.setText("Generate Report");
+        jButton14.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton14ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel17Layout = new javax.swing.GroupLayout(jPanel17);
         jPanel17.setLayout(jPanel17Layout);
@@ -1451,6 +1527,11 @@ public class Accounting extends javax.swing.JFrame {
         jButton15.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jButton15.setForeground(new java.awt.Color(255, 255, 255));
         jButton15.setText("Search");
+        jButton15.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton15ActionPerformed(evt);
+            }
+        });
 
         jLabel22.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jLabel22.setForeground(new java.awt.Color(0, 0, 0));
@@ -2358,9 +2439,13 @@ public class Accounting extends javax.swing.JFrame {
                         + "VALUES ('" + formattedDate + "','" + description + "','" + amount + "','" + transactionTypeMap.get(type) + "','" + transactionCategoryMap.get(category) + "','" + paymentMethodMap.get(paymentMethod) + "','" + referenceNo + "','"
                         + notes + "','" + receiptPath + "')");
 
-                // Update the budget after inserting the ledger entry
-                int categoryId = Integer.parseInt(transactionCategoryMap.get(category));
-                updateBudgetTotal(categoryId, Double.parseDouble(amount));
+                String typeId = transactionTypeMap.get(type);
+
+                if ("2".equals(typeId)) {  //check whether the transaction type is equal to debit
+                    // Update the budget after inserting the ledger entry
+                    int categoryId = Integer.parseInt(transactionCategoryMap.get(category));
+                    updateBudgetTotal(categoryId, Double.parseDouble(amount));
+                }
 
                 loadEntries();
                 clearLedgerEntries();
@@ -2539,8 +2624,13 @@ public class Accounting extends javax.swing.JFrame {
 
     private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
         // Income Statement
+        // Get dates from the date choosers
+        Date startDate = getStartDate();
+        Date endDate = getEndDate();
+
+        // Replace the panel with the incomeStatement
         jPanel16.removeAll();
-        incomeStatement income = new incomeStatement();
+        incomeStatement income = new incomeStatement(startDate, endDate);
         jPanel16.add(income, BorderLayout.CENTER);
         SwingUtilities.updateComponentTreeUI(jPanel16);
     }//GEN-LAST:event_jButton10ActionPerformed
@@ -2660,10 +2750,10 @@ public class Accounting extends javax.swing.JFrame {
                     double remainingAmount = budgetAmountVal - amountSpentVal;
                     double positiveRemainingAmount = Math.abs(remainingAmount);  //convert the negative remaining amount to positive
                     double usagePercentage = (amountSpentVal / budgetAmountVal) * 100; //Calculate the budget as a percentage
-                    
+
                     String usagePercentageStr = String.format("%.2f", usagePercentage); //turn the calculated percentage to string
 
-                    jLabel9.setText(usagePercentageStr+" "+"%");  // Set the text of budget 
+                    jLabel9.setText(usagePercentageStr + " " + "%");  // Set the text of budget 
                     jLabel48.setText(String.valueOf(remainingAmount));
 
                     if (remainingAmount < 0) {
@@ -2692,6 +2782,40 @@ public class Accounting extends javax.swing.JFrame {
         String selectedFilter = String.valueOf(jComboBox8.getSelectedItem());
         loadBudgets(selectedFilter);
     }//GEN-LAST:event_jButton5ActionPerformed
+
+    private void jButton15ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton15ActionPerformed
+        // Search income statements 
+        loadIncomeStatements();
+
+        // Get dates from the date choosers
+        Date startDate = getStartDate();
+        Date endDate = getEndDate();
+
+        // Replace the panel with the incomeStatement
+        jPanel16.removeAll();
+        incomeStatement income = new incomeStatement(startDate, endDate);
+        jPanel16.add(income, BorderLayout.CENTER);
+        SwingUtilities.updateComponentTreeUI(jPanel16);
+    }//GEN-LAST:event_jButton15ActionPerformed
+
+    private void jButton14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton14ActionPerformed
+        // Generate Reports
+        if (jPanel16.getComponentCount() > 0 && jPanel16.getComponent(0) instanceof incomeStatement) {
+            System.out.println("Print Income Statements");
+        }
+
+        if (jPanel16.getComponentCount() > 0 && jPanel16.getComponent(0) instanceof balanceSheet) {
+            System.out.println("Print Balance Sheet' ");
+        }
+
+        if (jPanel16.getComponentCount() > 0 && jPanel16.getComponent(0) instanceof cashFlow) {
+            System.out.println("Print CashFlow Statements' ");
+        }
+
+        if (jPanel16.getComponentCount() > 0 && jPanel16.getComponent(0) instanceof expense) {
+            System.out.println("Print Expense Reports ");
+        }
+    }//GEN-LAST:event_jButton14ActionPerformed
 
     /**
      * @param args the command line arguments
