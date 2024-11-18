@@ -4,17 +4,38 @@
  */
 package financialManagement.gui;
 
-/**
- *
- * @author User
- */
+import java.sql.ResultSet;
+import java.util.Vector;
+import javax.swing.table.DefaultTableModel;
+import model.MySQL2;
+
 public class balanceSheet extends javax.swing.JPanel {
 
-    /**
-     * Creates new form balanceSheet
-     */
+    private void loadBalanceSheet() {
+
+        try {
+            ResultSet result = MySQL2.executeSearch("SELECT * FROM `homeowners`.balance_sheet");
+            DefaultTableModel dtm = (DefaultTableModel) jTable1.getModel();
+            dtm.setRowCount(0);
+
+            while (result.next()) {
+                Vector vector = new Vector();
+                vector.add(result.getString("date"));
+                vector.add(result.getString("description"));
+                vector.add(result.getString("amount"));
+
+                dtm.addRow(vector);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
     public balanceSheet() {
         initComponents();
+        loadBalanceSheet();
     }
 
     /**
