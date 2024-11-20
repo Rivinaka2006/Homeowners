@@ -4,6 +4,7 @@
  */
 package gui;
 
+import chart.ModelPolarAreaChart;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import static gui.HumanResourse.is18OrOlder;
 import java.awt.Color;
@@ -34,7 +35,7 @@ import javax.swing.table.DefaultTableModel;
  * @author User
  */
 public class HumanResourse extends javax.swing.JFrame {
-    
+
     public HashMap<String, String> genderMap = new HashMap<>();
     public HashMap<String, String> TypeMap = new HashMap<>();
     public HashMap<String, String> EmployeeMap = new HashMap<>();
@@ -53,21 +54,110 @@ public class HumanResourse extends javax.swing.JFrame {
         loadleaveManagement();
         genareteSalaryId();
         chart();
+        loadAttendance();
+        loadDashboradCard();
     }
-    private void chart(){
+
+    private void chart() {
         getContentPane().setBackground(new Color(255, 255, 255));
+
         pieChart1.setChartType(PieChart.PeiChartType.DONUT_CHART);
-        pieChart1.addData(new ModelPieChart("Tigher", 150, new Color(23, 126, 238)));
-        pieChart1.addData(new ModelPieChart("ABC", 100, new Color(221, 65, 65)));
-        pieChart1.addData(new ModelPieChart("Coca", 1, new Color(47, 157, 64)));
-        pieChart1.addData(new ModelPieChart("Vita", 60, new Color(196, 151, 58)));
+        try {
+            ResultSet rs = MySQL.executeSearch(
+                    "SELECT COUNT(`type`) AS userType, `type`,`salary` "
+                    + "FROM `user` "
+                    + "INNER JOIN `user_type` ON `user_type`.`id` = `user`.`user_type_id` "
+                    + "GROUP BY `user_type`.`type`,`salary`"
+            );
+
+            // Array of predefined colors
+            Color[] colors = {
+                new Color(23, 126, 238), // Blue
+                new Color(34, 177, 76), // Green
+                new Color(237, 28, 36), // Red
+                new Color(255, 127, 39), // Orange
+                new Color(63, 72, 204) // Purple
+            // Add more colors as needed
+            };
+
+            int colorIndex = 0;
+
+            while (rs.next()) {
+                // Use modulo to cycle through colors
+                Color color = colors[colorIndex % colors.length];
+                colorIndex++;
+
+                pieChart1.addData(new ModelPieChart(
+                        rs.getString("type"),
+                        rs.getInt("userType"),
+                        color
+                ));
+                polarAreaChart.addItem(new ModelPolarAreaChart(
+                        color,
+                        rs.getString("type"),
+                        (rs.getDouble("salary") * rs.getDouble("userType"))
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+//        pieChart1.addData(new ModelPieChart("Tigher", 150, new Color(23, 126, 238)));
+//        pieChart1.addData(new ModelPieChart("ABC", 100, new Color(221, 65, 65)));
+//        pieChart1.addData(new ModelPieChart("Coca", 1, new Color(47, 157, 64)));
+//        pieChart1.addData(new ModelPieChart("Vita", 60, new Color(196, 151, 58)));
+        //getContentPane().setBackground(new Color(255, 255, 255));
+//        polarAreaChart.addItem(new ModelPolarAreaChart(new Color(52, 148, 203), "Coke", 60));
+//        polarAreaChart.addItem(new ModelPolarAreaChart(new Color(175, 67, 237), "Fanta", 50));
+//        polarAreaChart.addItem(new ModelPolarAreaChart(new Color(87, 218, 137), "Vital", 30));
+        polarAreaChart.start();
     }
+
     ///////////////kkkkk
     private void genareteSalaryId() {
         long id = System.currentTimeMillis();
         jTextField8.setText(String.valueOf(id));
     }
-    
+
+    private void loadDashboradCard() {
+        try {
+            ResultSet rs = MySQL.executeSearch("SELECT COUNT(`user`.`id`) AS `TotalEmployee` FROM `user` "
+                    + "INNER JOIN `attedance` ON `user`.`id` = `attedance`.`user_id` "
+                    + "INNER JOIN `user_type` ON `user_type`.`id` = `user`.`user_type_id`");
+            if (rs.next()) {
+                jLabel50.setText(rs.getString("TotalEmployee"));
+            }
+            int rowcount = jTable7.getRowCount();
+            jLabel53.setText(String.valueOf(rowcount));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadAttendance() {
+        String dateTime = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        try {
+            DefaultTableModel tableModel = (DefaultTableModel) jTable7.getModel();
+            tableModel.setRowCount(0);
+            ResultSet rs = MySQL.executeSearch("SELECT * FROM `attedance` "
+                    + "INNER JOIN `user` ON `user`.`id` = `attedance`.`user_id` "
+                    + "INNER JOIN `user_type` ON `user_type`.`id` = `user`.`user_type_id` WHERE `attedance`.`present_day` = '" + dateTime + "'");
+            while (rs.next()) {
+                Vector<String> v = new Vector<>();
+                v.add(rs.getString("user.id"));
+                v.add(rs.getString("f_name") + " " + rs.getString("l_name"));
+                v.add(rs.getString("type"));
+                v.add(rs.getString("time"));
+                tableModel.addRow(v);
+
+            }
+
+            jTable7.setModel(tableModel);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private void loadEmployeeRoll() {
         try {
             ResultSet rs = MySQL.executeSearch("SELECT * FROM `user_type`");
@@ -83,7 +173,7 @@ public class HumanResourse extends javax.swing.JFrame {
             e.printStackTrace();
         }
     }
-    
+
     private void loadGender() {
         try {
             ResultSet rs = MySQL.executeSearch("SELECT * FROM `gender`");
@@ -98,7 +188,7 @@ public class HumanResourse extends javax.swing.JFrame {
             e.printStackTrace();
         }
     }
-    
+
     private void loadUserType() {
         try {
             ResultSet rs = MySQL.executeSearch("SELECT * FROM `user_type`");
@@ -113,7 +203,7 @@ public class HumanResourse extends javax.swing.JFrame {
             e.printStackTrace();
         }
     }
-    
+
     private void loadEmployee() {
         try {
             DefaultTableModel m = (DefaultTableModel) jTable1.getModel();
@@ -141,7 +231,7 @@ public class HumanResourse extends javax.swing.JFrame {
             e.printStackTrace();
         }
     }
-    
+
     private void loadUers(String sort, String type) {
         try {
             DefaultTableModel m = (DefaultTableModel) jTable5.getModel();
@@ -152,7 +242,7 @@ public class HumanResourse extends javax.swing.JFrame {
                 v.add(rs.getString("id"));
                 v.add(rs.getString("type"));
                 v.add(rs.getString("salary"));
-                
+
                 m.addRow(v);
             }
             jTable5.setModel(m);
@@ -160,18 +250,18 @@ public class HumanResourse extends javax.swing.JFrame {
             e.printStackTrace();
         }
     }
-    
+
     public static boolean is18OrOlder(String dob) {
-        
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate birthDate = LocalDate.parse(dob, formatter);
         LocalDate currentDate = LocalDate.now();
         Period age = Period.between(birthDate, currentDate);
         return age.getYears() < 18;
     }
-    
+
     private void loadPayRoll() {
-        
+
         if (jDateChooser1.getDate() != null && jDateChooser2.getDate() != null) {
             try {
                 DefaultTableModel m = (DefaultTableModel) jTable2.getModel();
@@ -183,15 +273,15 @@ public class HumanResourse extends javax.swing.JFrame {
                         + "INNER JOIN user_type ON user_type.id = user.user_type_id "
                         + "LEFT JOIN addtional_salary ON addtional_salary.user_id = user.id "
                         + "LEFT JOIN leav_management ON leav_management.user_id = user.id ";
-                
+
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-                Date addedDate = jDateChooser1.getDate();
-                Date to = jDateChooser2.getDate();
+                Date addedDate = jDateChooser2.getDate();
+                Date to = jDateChooser1.getDate();
 
                 // Add the date range filtering
                 if (addedDate != null) {
                     query += "WHERE (attedance.present_day >= '" + format.format(addedDate) + "' ";
-                    
+
                     if (to != null) {
                         query += "AND attedance.present_day <= '" + format.format(to) + "') OR (`leav_date` >= '" + format.format(addedDate) + "' AND `leav_date` <= '" + format.format(to) + "')";
                     }
@@ -225,7 +315,7 @@ public class HumanResourse extends javax.swing.JFrame {
                     v.add(rs.getString("l_name"));
                     v.add(rs.getString("dayCount"));
                     v.add(rs.getString("leaveCount"));
-                    
+
                     double Alldays = (rs.getInt("dayCount") + Double.parseDouble(rs.getString("leaveCount")) / 2);
                     v.add(String.valueOf(Alldays));
                     v.add(rs.getString("salary"));
@@ -251,7 +341,7 @@ public class HumanResourse extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Please select dates", "Warning", JOptionPane.WARNING_MESSAGE);
         }
     }
-    
+
     private void loadRollManagement() {
         try {
             DefaultTableModel m = (DefaultTableModel) jTable3.getModel();
@@ -262,7 +352,7 @@ public class HumanResourse extends javax.swing.JFrame {
             if (jComboBox6.getSelectedIndex() > 0) {
                 query += "WHERE `user_type`.`type` = '" + jComboBox6.getSelectedItem() + "'";
             }
-            
+
             ResultSet rs = MySQL.executeSearch(query);
             while (rs.next()) {
                 Vector<String> v = new Vector<>();
@@ -281,7 +371,7 @@ public class HumanResourse extends javax.swing.JFrame {
             e.printStackTrace();
         }
     }
-    
+
     private void loadleaveManagement() {
         try {
             DefaultTableModel m = (DefaultTableModel) jTable4.getModel();
@@ -289,7 +379,7 @@ public class HumanResourse extends javax.swing.JFrame {
             String query = "SELECT * FROM `user` INNER JOIN `user_type` ON `user_type`.`id` = `user`.`user_type_id` "
                     + "INNER JOIN `status` ON `status`.`id` = `user`.`status_id`"
                     + "INNER JOIN `leav_management` ON `leav_management`.`user_id` = `user`.`id`";
-            
+
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
             Date addedDate = jDateChooser5.getDate();
             Date to = jDateChooser6.getDate();
@@ -297,7 +387,7 @@ public class HumanResourse extends javax.swing.JFrame {
             // Add the date range filtering
             if (addedDate != null) {
                 query += "WHERE leav_management.leav_date >= '" + format.format(addedDate) + "' ";
-                
+
                 if (to != null) {
                     query += "AND leav_management.leav_date <= '" + format.format(to) + "' ";
                 }
@@ -321,7 +411,7 @@ public class HumanResourse extends javax.swing.JFrame {
             } else if (sort.equals("Time DESC")) {
                 query += "ORDER BY `leav_management`.`leav_date` DESC";
             }
-            
+
             ResultSet rs = MySQL.executeSearch(query);
             while (rs.next()) {
                 Vector<String> v = new Vector<>();
@@ -353,6 +443,24 @@ public class HumanResourse extends javax.swing.JFrame {
         timePicker1 = new com.raven.swing.TimePicker();
         modelPieChart1 = new javaswingdev.chart.ModelPieChart();
         jTabbedPane1 = new javax.swing.JTabbedPane();
+        jPanel14 = new javax.swing.JPanel();
+        jPanel17 = new javax.swing.JPanel();
+        jLabel43 = new javax.swing.JLabel();
+        jLabel50 = new javax.swing.JLabel();
+        jPanel18 = new javax.swing.JPanel();
+        jLabel52 = new javax.swing.JLabel();
+        jLabel48 = new javax.swing.JLabel();
+        jPanel19 = new javax.swing.JPanel();
+        jLabel53 = new javax.swing.JLabel();
+        jLabel49 = new javax.swing.JLabel();
+        pieChart1 = new javaswingdev.chart.PieChart();
+        jLabel54 = new javax.swing.JLabel();
+        jLabel55 = new javax.swing.JLabel();
+        calendarCustom1 = new main.CalendarCustom();
+        polarAreaChart = new chart.PolarAreaChart();
+        jScrollPane8 = new javax.swing.JScrollPane();
+        jTable7 = new javax.swing.JTable();
+        jLabel56 = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
         jPanel5 = new javax.swing.JPanel();
         jPanel6 = new javax.swing.JPanel();
@@ -467,25 +575,198 @@ public class HumanResourse extends javax.swing.JFrame {
         jLabel46 = new javax.swing.JLabel();
         jLabel45 = new javax.swing.JLabel();
         jLabel47 = new javax.swing.JLabel();
-        jPanel14 = new javax.swing.JPanel();
-        jPanel17 = new javax.swing.JPanel();
-        jLabel43 = new javax.swing.JLabel();
-        jLabel50 = new javax.swing.JLabel();
-        jPanel18 = new javax.swing.JPanel();
-        jLabel52 = new javax.swing.JLabel();
-        jLabel48 = new javax.swing.JLabel();
-        jPanel19 = new javax.swing.JPanel();
-        jLabel53 = new javax.swing.JLabel();
-        jLabel49 = new javax.swing.JLabel();
-        pieChart1 = new javaswingdev.chart.PieChart();
-        jLabel54 = new javax.swing.JLabel();
-        jLabel55 = new javax.swing.JLabel();
-        calendarCustom1 = new main.CalendarCustom();
 
         timePicker1.set24hourMode(true);
         timePicker1.setDisplayText(jFormattedTextField1);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jPanel17.setBackground(new java.awt.Color(153, 204, 255));
+
+        jLabel43.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        jLabel43.setText("Total Employee");
+
+        jLabel50.setFont(new java.awt.Font("Segoe UI", 0, 48)); // NOI18N
+        jLabel50.setForeground(new java.awt.Color(0, 0, 153));
+        jLabel50.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        jLabel50.setText("07");
+
+        javax.swing.GroupLayout jPanel17Layout = new javax.swing.GroupLayout(jPanel17);
+        jPanel17.setLayout(jPanel17Layout);
+        jPanel17Layout.setHorizontalGroup(
+            jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel17Layout.createSequentialGroup()
+                .addGap(20, 20, 20)
+                .addComponent(jLabel43, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel50, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
+                .addGap(34, 34, 34))
+        );
+        jPanel17Layout.setVerticalGroup(
+            jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel43, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel50, javax.swing.GroupLayout.DEFAULT_SIZE, 88, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+
+        jPanel18.setBackground(new java.awt.Color(255, 204, 204));
+
+        jLabel52.setFont(new java.awt.Font("Segoe UI", 0, 48)); // NOI18N
+        jLabel52.setForeground(new java.awt.Color(255, 102, 102));
+        jLabel52.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        jLabel52.setText("07");
+
+        jLabel48.setBackground(new java.awt.Color(0, 153, 204));
+        jLabel48.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        jLabel48.setText("Now Joing");
+
+        javax.swing.GroupLayout jPanel18Layout = new javax.swing.GroupLayout(jPanel18);
+        jPanel18.setLayout(jPanel18Layout);
+        jPanel18Layout.setHorizontalGroup(
+            jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel18Layout.createSequentialGroup()
+                .addGap(9, 9, 9)
+                .addComponent(jLabel48, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel52, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
+                .addGap(34, 34, 34))
+        );
+        jPanel18Layout.setVerticalGroup(
+            jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel18Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel52, javax.swing.GroupLayout.DEFAULT_SIZE, 88, Short.MAX_VALUE)
+                    .addGroup(jPanel18Layout.createSequentialGroup()
+                        .addComponent(jLabel48, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+
+        jPanel19.setBackground(new java.awt.Color(153, 255, 204));
+
+        jLabel53.setFont(new java.awt.Font("Segoe UI", 0, 48)); // NOI18N
+        jLabel53.setForeground(new java.awt.Color(0, 102, 102));
+        jLabel53.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        jLabel53.setText("07");
+
+        jLabel49.setBackground(new java.awt.Color(0, 153, 204));
+        jLabel49.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        jLabel49.setText("Today's Attendance");
+
+        javax.swing.GroupLayout jPanel19Layout = new javax.swing.GroupLayout(jPanel19);
+        jPanel19.setLayout(jPanel19Layout);
+        jPanel19Layout.setHorizontalGroup(
+            jPanel19Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel19Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel49, javax.swing.GroupLayout.PREFERRED_SIZE, 189, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel53, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(16, Short.MAX_VALUE))
+        );
+        jPanel19Layout.setVerticalGroup(
+            jPanel19Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jLabel53, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE)
+            .addGroup(jPanel19Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel49, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jLabel54.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
+        jLabel54.setText("Employee Type");
+
+        jLabel55.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
+        jLabel55.setText("Total Employee Type Salary");
+
+        jTable7.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "ID", "Name", "User Type", "Time"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jTable7.getTableHeader().setReorderingAllowed(false);
+        jScrollPane8.setViewportView(jTable7);
+
+        jLabel56.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
+        jLabel56.setText("Today Attendance ");
+
+        javax.swing.GroupLayout jPanel14Layout = new javax.swing.GroupLayout(jPanel14);
+        jPanel14.setLayout(jPanel14Layout);
+        jPanel14Layout.setHorizontalGroup(
+            jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel14Layout.createSequentialGroup()
+                .addGroup(jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel14Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jPanel17, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(30, 30, 30)
+                        .addComponent(jPanel18, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(30, 30, 30)
+                        .addComponent(jPanel19, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel14Layout.createSequentialGroup()
+                        .addGap(16, 16, 16)
+                        .addComponent(jLabel54)
+                        .addGap(406, 406, 406)
+                        .addGroup(jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(polarAreaChart, javax.swing.GroupLayout.PREFERRED_SIZE, 434, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel55)))
+                    .addGroup(jPanel14Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(pieChart1, javax.swing.GroupLayout.PREFERRED_SIZE, 463, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 47, Short.MAX_VALUE)
+                .addGroup(jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(calendarCustom1, javax.swing.GroupLayout.PREFERRED_SIZE, 568, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jScrollPane8, javax.swing.GroupLayout.PREFERRED_SIZE, 629, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel56))
+                .addContainerGap())
+        );
+        jPanel14Layout.setVerticalGroup(
+            jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel14Layout.createSequentialGroup()
+                .addGap(30, 30, 30)
+                .addGroup(jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel14Layout.createSequentialGroup()
+                        .addGroup(jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jPanel18, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jPanel19, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jPanel17, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(45, 45, 45)
+                        .addGroup(jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel54)
+                            .addComponent(jLabel55))
+                        .addGroup(jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel14Layout.createSequentialGroup()
+                                .addGap(55, 55, 55)
+                                .addComponent(polarAreaChart, javax.swing.GroupLayout.PREFERRED_SIZE, 429, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanel14Layout.createSequentialGroup()
+                                .addGap(18, 18, 18)
+                                .addComponent(pieChart1, javax.swing.GroupLayout.PREFERRED_SIZE, 452, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel14Layout.createSequentialGroup()
+                        .addComponent(calendarCustom1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel56)
+                        .addGap(18, 18, 18)
+                        .addComponent(jScrollPane8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(20, 20, 20))))
+        );
+
+        jTabbedPane1.addTab("DashBoard", jPanel14);
 
         jLabel2.setText("First Name");
 
@@ -696,7 +977,7 @@ public class HumanResourse extends javax.swing.JFrame {
                 .addGap(14, 14, 14)
                 .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1389, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1364, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel5Layout.setVerticalGroup(
@@ -709,7 +990,7 @@ public class HumanResourse extends javax.swing.JFrame {
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addGap(63, 63, 63)
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 785, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(82, Short.MAX_VALUE))
+                .addContainerGap(72, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -813,7 +1094,7 @@ public class HumanResourse extends javax.swing.JFrame {
                         .addComponent(jButton10)
                         .addGap(18, 18, 18)
                         .addComponent(jButton2)))
-                .addContainerGap(132, Short.MAX_VALUE))
+                .addContainerGap(107, Short.MAX_VALUE))
         );
         jPanel10Layout.setVerticalGroup(
             jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1081,7 +1362,7 @@ public class HumanResourse extends javax.swing.JFrame {
                     .addGroup(jPanel7Layout.createSequentialGroup()
                         .addGap(61, 61, 61)
                         .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 1415, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(280, Short.MAX_VALUE))
+                .addContainerGap(255, Short.MAX_VALUE))
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1372,13 +1653,13 @@ public class HumanResourse extends javax.swing.JFrame {
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addGap(9, 9, 9)
                 .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(218, Short.MAX_VALUE))
+                .addContainerGap(193, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, 910, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 100, Short.MAX_VALUE))
+                .addGap(0, 90, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Leave", jPanel4);
@@ -1459,6 +1740,9 @@ public class HumanResourse extends javax.swing.JFrame {
         jLabel45.setText("xxxxxxxxxxxx");
 
         jLabel47.setBackground(new java.awt.Color(102, 255, 102));
+        jLabel47.setFont(new java.awt.Font("SriLanka", 0, 36)); // NOI18N
+        jLabel47.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel47.setText("444445522");
         jLabel47.setOpaque(true);
 
         javax.swing.GroupLayout jPanel15Layout = new javax.swing.GroupLayout(jPanel15);
@@ -1579,169 +1863,26 @@ public class HumanResourse extends javax.swing.JFrame {
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel12Layout.createSequentialGroup()
                 .addComponent(jPanel13, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 55, Short.MAX_VALUE))
+                .addGap(0, 45, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("User ID", jPanel12);
-
-        jPanel17.setBackground(new java.awt.Color(153, 204, 255));
-
-        jLabel43.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jLabel43.setText("Total Employee");
-
-        jLabel50.setFont(new java.awt.Font("Segoe UI", 0, 48)); // NOI18N
-        jLabel50.setForeground(new java.awt.Color(0, 0, 153));
-        jLabel50.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        jLabel50.setText("07");
-
-        javax.swing.GroupLayout jPanel17Layout = new javax.swing.GroupLayout(jPanel17);
-        jPanel17.setLayout(jPanel17Layout);
-        jPanel17Layout.setHorizontalGroup(
-            jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel17Layout.createSequentialGroup()
-                .addGap(20, 20, 20)
-                .addComponent(jLabel43, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel50, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
-                .addGap(34, 34, 34))
-        );
-        jPanel17Layout.setVerticalGroup(
-            jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel43, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel50, javax.swing.GroupLayout.DEFAULT_SIZE, 88, Short.MAX_VALUE))
-                .addContainerGap())
-        );
-
-        jPanel18.setBackground(new java.awt.Color(255, 204, 204));
-
-        jLabel52.setFont(new java.awt.Font("Segoe UI", 0, 48)); // NOI18N
-        jLabel52.setForeground(new java.awt.Color(255, 102, 102));
-        jLabel52.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        jLabel52.setText("07");
-
-        jLabel48.setBackground(new java.awt.Color(0, 153, 204));
-        jLabel48.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jLabel48.setText("Now Joing");
-
-        javax.swing.GroupLayout jPanel18Layout = new javax.swing.GroupLayout(jPanel18);
-        jPanel18.setLayout(jPanel18Layout);
-        jPanel18Layout.setHorizontalGroup(
-            jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel18Layout.createSequentialGroup()
-                .addGap(9, 9, 9)
-                .addComponent(jLabel48, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel52, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
-                .addGap(34, 34, 34))
-        );
-        jPanel18Layout.setVerticalGroup(
-            jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel18Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel52, javax.swing.GroupLayout.DEFAULT_SIZE, 88, Short.MAX_VALUE)
-                    .addGroup(jPanel18Layout.createSequentialGroup()
-                        .addComponent(jLabel48, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
-        );
-
-        jPanel19.setBackground(new java.awt.Color(153, 255, 204));
-
-        jLabel53.setFont(new java.awt.Font("Segoe UI", 0, 48)); // NOI18N
-        jLabel53.setForeground(new java.awt.Color(0, 102, 102));
-        jLabel53.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        jLabel53.setText("07");
-
-        jLabel49.setBackground(new java.awt.Color(0, 153, 204));
-        jLabel49.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jLabel49.setText("Today's Attendance");
-
-        javax.swing.GroupLayout jPanel19Layout = new javax.swing.GroupLayout(jPanel19);
-        jPanel19.setLayout(jPanel19Layout);
-        jPanel19Layout.setHorizontalGroup(
-            jPanel19Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel19Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel49, javax.swing.GroupLayout.PREFERRED_SIZE, 189, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel53, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(16, Short.MAX_VALUE))
-        );
-        jPanel19Layout.setVerticalGroup(
-            jPanel19Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jLabel53, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE)
-            .addGroup(jPanel19Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel49, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-
-        jLabel54.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
-        jLabel54.setText("Employee Type");
-
-        jLabel55.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
-        jLabel55.setText("Employee Salary");
-
-        javax.swing.GroupLayout jPanel14Layout = new javax.swing.GroupLayout(jPanel14);
-        jPanel14.setLayout(jPanel14Layout);
-        jPanel14Layout.setHorizontalGroup(
-            jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel14Layout.createSequentialGroup()
-                .addGroup(jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel14Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel14Layout.createSequentialGroup()
-                                .addComponent(jPanel17, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(30, 30, 30)
-                                .addComponent(jPanel18, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(30, 30, 30)
-                                .addComponent(jPanel19, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(pieChart1, javax.swing.GroupLayout.PREFERRED_SIZE, 463, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanel14Layout.createSequentialGroup()
-                        .addGap(16, 16, 16)
-                        .addComponent(jLabel54)
-                        .addGap(406, 406, 406)
-                        .addComponent(jLabel55)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 87, Short.MAX_VALUE)
-                .addComponent(calendarCustom1, javax.swing.GroupLayout.PREFERRED_SIZE, 568, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(52, 52, 52))
-        );
-        jPanel14Layout.setVerticalGroup(
-            jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel14Layout.createSequentialGroup()
-                .addGap(30, 30, 30)
-                .addGroup(jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(calendarCustom1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel14Layout.createSequentialGroup()
-                        .addGroup(jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jPanel18, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jPanel19, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jPanel17, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(45, 45, 45)
-                        .addGroup(jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel54)
-                            .addComponent(jLabel55))
-                        .addGap(18, 18, 18)
-                        .addComponent(pieChart1, javax.swing.GroupLayout.PREFERRED_SIZE, 466, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(319, Short.MAX_VALUE))
-        );
-
-        jTabbedPane1.addTab("DashBoard", jPanel14);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 1731, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(19, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jTabbedPane1)
+                .addContainerGap())
         );
 
         pack();
@@ -1801,7 +1942,7 @@ public class HumanResourse extends javax.swing.JFrame {
             Date date = new Date();
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
             String dateTime = format.format(date);
-            
+
             try {
                 ResultSet rs = MySQL.executeSearch("SELECT * FROM `user` WHERE `username` = '" + username + "' AND `mobile` = '" + mobile + "'");
                 if (rs.next()) {
@@ -1817,7 +1958,7 @@ public class HumanResourse extends javax.swing.JFrame {
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
-            
+
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
@@ -1940,7 +2081,7 @@ public class HumanResourse extends javax.swing.JFrame {
         // TODO add your handling code here:
         int selectRow = jTable1.getSelectedRow();
         if (selectRow != -1) {
-            
+
             String fname = jTextField1.getText();
             String lname = jTextField2.getText();
             String mobile = jTextField3.getText();
@@ -1949,7 +2090,7 @@ public class HumanResourse extends javax.swing.JFrame {
             String gender = String.valueOf(jComboBox1.getSelectedItem());
             String type = String.valueOf(jComboBox2.getSelectedItem());
             String nic = jTextField5.getText();
-            
+
             Date dob = jDateChooser3.getDate();
             if (fname.isBlank()) {
                 JOptionPane.showMessageDialog(this, "Please enter employee first name", "Warning", JOptionPane.WARNING_MESSAGE);
@@ -1982,7 +2123,7 @@ public class HumanResourse extends javax.swing.JFrame {
             } else {
                 Date date = new Date();
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-                
+
                 try {
                     boolean canUpdate = false;
                     ResultSet rs = MySQL.executeSearch("SELECT * FROM `user` WHERE `mobile` = '" + mobile + "' OR `nic`= '" + nic + "'");
@@ -1993,23 +2134,23 @@ public class HumanResourse extends javax.swing.JFrame {
                             canUpdate = true;
                         }
                     } else {
-                        
+
                         canUpdate = true;
                     }
                     //Update Employee Table
 
                     if (canUpdate) {
                         MySQL.executeIUD("UPDATE `user` SET `f_name` = '" + fname + "',`l_name` = '" + lname + "',`mobile` = '" + mobile + "',`nic` = '" + nic + "',`password` = '" + password + "',`gender_id` = '" + genderMap.get(gender) + "',`dob` = '" + format.format(jDateChooser3.getDate()) + "'  WHERE `username` = '" + username + "'");
-                        
+
                         JOptionPane.showMessageDialog(this, "Update Sucessfully", "Success", JOptionPane.INFORMATION_MESSAGE);
                         loadEmployee();
-                        
+
                         jTextField4.setEditable(true);
                         jButton1.setEnabled(true);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    
+
                 }
             }
         } else {
@@ -2060,7 +2201,7 @@ public class HumanResourse extends javax.swing.JFrame {
                     JOptionPane.showMessageDialog(this, "Invaild User ID", "Warning", JOptionPane.WARNING_MESSAGE);
                     jTextField6.setText("");
                 }
-                
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -2086,23 +2227,23 @@ public class HumanResourse extends javax.swing.JFrame {
         if (totalAmount <= 0) {
             JOptionPane.showMessageDialog(this, "Please find out the dates required to process the monthly salary !", "Warning", JOptionPane.WARNING_MESSAGE);
         } else {
-            
+
             Date date = new Date();
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
             String dateTime = format.format(date);
-            
+
             try {
                 ResultSet rs = MySQL.executeSearch("SELECT * FROM `salary_history` WHERE `to` >= '" + format.format(fromDate) + "' AND `from` <= '" + format.format(toDate) + "' ");
                 if (rs.next()) {
                     JOptionPane.showMessageDialog(this, "You have previously calculated employee salaries with these dates", "Warning", JOptionPane.WARNING_MESSAGE);
                 } else {
                     MySQL.executeIUD("INSERT INTO `salary_history` (`id`,`employeePayment`,`date_time`,`to`,`from`) VALUES('" + jTextField8.getText() + "','" + totalAmount + "','" + dateTime + "','" + format.format(toDate) + "','" + format.format(fromDate) + "')");
-                    
+
                     for (int i = 0; i < jTable2.getRowCount(); i++) {
                         String days = String.valueOf(jTable2.getValueAt(i, 3));
                         String totalsalary = String.valueOf(jTable2.getValueAt(i, 7));
                         String type = String.valueOf(jTable2.getValueAt(i, 5));
-                        
+
                         MySQL.executeIUD("INSERT INTO `salary_history_item` (`present_days`,`total_salary`,`user_id`,`salary_history_id`) VALUES('" + days + "','" + totalsalary + "','" + EmployeeMap.get(type) + "','" + jTextField8.getText() + "')");
                         genareteSalaryId();
                     }
@@ -2110,7 +2251,7 @@ public class HumanResourse extends javax.swing.JFrame {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            
+
         }
     }//GEN-LAST:event_jButton5ActionPerformed
 
@@ -2159,7 +2300,7 @@ public class HumanResourse extends javax.swing.JFrame {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            
+
         }
 
     }//GEN-LAST:event_jButton6ActionPerformed
@@ -2197,16 +2338,16 @@ public class HumanResourse extends javax.swing.JFrame {
         } else if (reason.isBlank()) {
             JOptionPane.showMessageDialog(this, "Please enter Leave Reason", "Warning", JOptionPane.WARNING_MESSAGE);
         } else {
-            try {             
-                    MySQL.executeIUD("UPDATE `leav_management` SET `reson` = '" + reason + "' WHERE `id` = '" + jLabel51.getText() + "'");
-                    JOptionPane.showMessageDialog(this, "Added Successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    loadleaveManagement();
-                    ClearleaveManagement();
-               
+            try {
+                MySQL.executeIUD("UPDATE `leav_management` SET `reson` = '" + reason + "' WHERE `id` = '" + jLabel51.getText() + "'");
+                JOptionPane.showMessageDialog(this, "Added Successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
+                loadleaveManagement();
+                ClearleaveManagement();
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            
+
         }
     }//GEN-LAST:event_jButton7ActionPerformed
 
@@ -2221,10 +2362,10 @@ public class HumanResourse extends javax.swing.JFrame {
             jTextField6.setText(String.valueOf(jTable4.getValueAt(selectRow, 1)));
             jLabel28.setText(String.valueOf(jTable4.getValueAt(selectRow, 2)));
             jLabel29.setText(String.valueOf(jTable4.getValueAt(selectRow, 3)));
-            
+
             try {
                 jDateChooser4.setDate(new SimpleDateFormat("yyyy-MM-dd").parse(String.valueOf(jTable4.getValueAt(selectRow, 4))));
-                
+
             } catch (ParseException ex) {
                 ex.printStackTrace();
                 //Logger.getLogger(HumanResourse.class.getName()).log(Level.SEVERE, null, ex);
@@ -2342,6 +2483,7 @@ public class HumanResourse extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel53;
     private javax.swing.JLabel jLabel54;
     private javax.swing.JLabel jLabel55;
+    private javax.swing.JLabel jLabel56;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
@@ -2372,6 +2514,7 @@ public class HumanResourse extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JScrollPane jScrollPane7;
+    private javax.swing.JScrollPane jScrollPane8;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTable jTable2;
@@ -2379,6 +2522,7 @@ public class HumanResourse extends javax.swing.JFrame {
     private javax.swing.JTable jTable4;
     private javax.swing.JTable jTable5;
     private javax.swing.JTable jTable6;
+    private javax.swing.JTable jTable7;
     private javax.swing.JTextArea jTextArea1;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
@@ -2390,6 +2534,7 @@ public class HumanResourse extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField8;
     private javaswingdev.chart.ModelPieChart modelPieChart1;
     private javaswingdev.chart.PieChart pieChart1;
+    private chart.PolarAreaChart polarAreaChart;
     private com.raven.swing.TimePicker timePicker1;
     // End of variables declaration//GEN-END:variables
 private void clear() {
@@ -2404,14 +2549,14 @@ private void clear() {
         jComboBox2.setSelectedIndex(0);
         jComboBox2.setEnabled(true);
     }
-    
+
     private void userTypeClear() {
         jTextField7.setText("");
         jFormattedTextField2.setText("");
         jButton11.setEnabled(true);
         jTextField7.setEditable(true);
     }
-    
+
     private void sort() {
         int sort = jComboBox7.getSelectedIndex();
         if (sort == 0) {
@@ -2428,7 +2573,7 @@ private void clear() {
             loadUers("type", "DESC");
         }
     }
-    
+
     private void ClearleaveManagement() {
         jTextField6.setText("");
         jButton12.setEnabled(true);
@@ -2441,6 +2586,6 @@ private void clear() {
         jFormattedTextField1.setEditable(true);
         jLabel51.setText("....");
         jButton6.setEnabled(true);
-        
+
     }
 }
