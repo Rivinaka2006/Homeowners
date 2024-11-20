@@ -5,27 +5,49 @@
 package financialManagement.gui;
 
 import java.sql.ResultSet;
+import java.util.Date;
 import java.util.Vector;
 import javax.swing.table.DefaultTableModel;
 import model.MySQL2;
 
 public class balanceSheet extends javax.swing.JPanel {
 
-    private void loadBalanceSheet() {
+    private Date startDate;
+    private Date endDate;
+    
+        public balanceSheet(Date startDate, Date endDate) {
+        this.startDate = startDate;
+        this.endDate = endDate;
+        initComponents();
+        loadBalanceSheet();
+    }
+
+    public void loadBalanceSheet() {
 
         try {
             ResultSet result = MySQL2.executeSearch("SELECT * FROM `homeowners`.balance_sheet");
             DefaultTableModel dtm = (DefaultTableModel) jTable1.getModel();
-            dtm.setRowCount(0);
+            double totalAmount = 0.0; // Variable to store the sum of the amount column
 
             while (result.next()) {
                 Vector vector = new Vector();
                 vector.add(result.getString("date"));
                 vector.add(result.getString("description"));
-                vector.add(result.getString("amount"));
+
+                // Get the amount and add it to the total
+                double amount = result.getDouble("amount");
+                totalAmount += amount;
+                vector.add(String.format("%.2f", amount)); // Format amount to 2 decimal places
 
                 dtm.addRow(vector);
             }
+
+            // Add the total row
+            Vector totalRow = new Vector();
+            totalRow.add(""); // Leave date column empty
+            totalRow.add("Total"); // Add "Total" to the description column
+            totalRow.add(String.format("%.2f", totalAmount)); // Add the total amount to the amount column
+            dtm.addRow(totalRow);
 
         } catch (Exception e) {
             e.printStackTrace();

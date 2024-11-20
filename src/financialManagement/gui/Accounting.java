@@ -2637,8 +2637,11 @@ public class Accounting extends javax.swing.JFrame {
 
     private void jButton11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton11ActionPerformed
         // Balance Sheet
+        Date startDate = getStartDate();
+        Date endDate = getEndDate();
+
         jPanel16.removeAll();
-        balanceSheet balance = new balanceSheet();
+        balanceSheet balance = new balanceSheet(startDate, endDate);
         jPanel16.add(balance, BorderLayout.CENTER);
         SwingUtilities.updateComponentTreeUI(jPanel16);
     }//GEN-LAST:event_jButton11ActionPerformed
@@ -2791,11 +2794,22 @@ public class Accounting extends javax.swing.JFrame {
         Date startDate = getStartDate();
         Date endDate = getEndDate();
 
-        // Replace the panel with the incomeStatement
-        jPanel16.removeAll();
-        incomeStatement income = new incomeStatement(startDate, endDate);
-        jPanel16.add(income, BorderLayout.CENTER);
-        SwingUtilities.updateComponentTreeUI(jPanel16);
+        if (jPanel16.getComponentCount() > 0 && jPanel16.getComponent(0) instanceof incomeStatement) {
+            // Replace the panel with the incomeStatement
+            jPanel16.removeAll();
+            incomeStatement income = new incomeStatement(startDate, endDate);
+            jPanel16.add(income, BorderLayout.CENTER);
+            SwingUtilities.updateComponentTreeUI(jPanel16);
+        }
+
+        if (jPanel16.getComponentCount() > 0 && jPanel16.getComponent(0) instanceof balanceSheet) {
+            jPanel16.removeAll();
+            balanceSheet balance = new balanceSheet(startDate, endDate);
+            jPanel16.add(balance, BorderLayout.CENTER);
+            SwingUtilities.updateComponentTreeUI(jPanel16);
+           // loadBalanceSheet();
+        }
+
     }//GEN-LAST:event_jButton15ActionPerformed
 
     private void jButton14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton14ActionPerformed

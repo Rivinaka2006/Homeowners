@@ -4,7 +4,6 @@
  */
 package financialManagement.gui;
 
-import com.toedter.calendar.JDateChooser;
 import model.MySQL2;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
