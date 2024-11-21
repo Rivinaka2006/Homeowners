@@ -78,9 +78,9 @@ public class dashBoard extends javax.swing.JFrame {
         jTextField1.setText(String.valueOf(id));
 //        jLabel3.setText(SignInWindow.getEmployeeUsername());
 //        jLabel24.setText(SignInWindow.getEmployeeID());
-        jTable1.getTableHeader().setFont(new Font("Tw Cen MT", Font.BOLD, 15));
-        jTable1.getTableHeader().setForeground(Color.WHITE);
-        jTable1.getTableHeader().setBackground(Color.ORANGE);
+//        jTable1.getTableHeader().setFont(new Font("Tw Cen MT", Font.BOLD, 15));
+//        jTable1.getTableHeader().setForeground(Color.WHITE);
+//        jTable1.getTableHeader().setBackground(Color.ORANGE);
     }
 
     private void loadGRNItem() {
@@ -618,7 +618,7 @@ public class dashBoard extends javax.swing.JFrame {
         jLabel55.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
         jLabel55.setText("ID");
 
-        jButton16.setFont(new java.awt.Font("Tw Cen MT", 0, 18)); // NOI18N
+        jButton16.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         jButton16.setText("Select");
         jButton16.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -635,7 +635,7 @@ public class dashBoard extends javax.swing.JFrame {
 
         jTextField18.setFont(new java.awt.Font("Tw Cen MT", 0, 18)); // NOI18N
 
-        jButton17.setFont(new java.awt.Font("Tw Cen MT", 0, 18)); // NOI18N
+        jButton17.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         jButton17.setText("Select");
 
         jLabel58.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
@@ -668,7 +668,7 @@ public class dashBoard extends javax.swing.JFrame {
         jLabel66.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
         jLabel66.setText("Product Name Here");
 
-        jButton18.setFont(new java.awt.Font("Tw Cen MT", 0, 18)); // NOI18N
+        jButton18.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         jButton18.setText("Add To GRN");
         jButton18.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -676,7 +676,7 @@ public class dashBoard extends javax.swing.JFrame {
             }
         });
 
-        jButton19.setFont(new java.awt.Font("Tw Cen MT", 0, 18)); // NOI18N
+        jButton19.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         jButton19.setText("Reset");
 
         jLabel67.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
@@ -717,7 +717,6 @@ public class dashBoard extends javax.swing.JFrame {
         jLabel70.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
         jLabel70.setText("Payment");
 
-        jLabel71.setBackground(new java.awt.Color(0, 204, 204));
         jLabel71.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
         jLabel71.setForeground(new java.awt.Color(255, 255, 255));
         jLabel71.setText("Balance");
@@ -729,13 +728,13 @@ public class dashBoard extends javax.swing.JFrame {
 
         jFormattedTextField10.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
 
-        jLabel73.setBackground(new java.awt.Color(0, 204, 204));
         jLabel73.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
         jLabel73.setForeground(new java.awt.Color(255, 255, 255));
         jLabel73.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         jLabel73.setText("0.00");
         jLabel73.setOpaque(true);
 
+        jButton20.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         jButton20.setText("Save GRN");
 
         javax.swing.GroupLayout jPanel20Layout = new javax.swing.GroupLayout(jPanel20);
@@ -811,13 +810,13 @@ public class dashBoard extends javax.swing.JFrame {
                                 .addComponent(jFormattedTextField8, javax.swing.GroupLayout.PREFERRED_SIZE, 199, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addComponent(jFormattedTextField9, javax.swing.GroupLayout.PREFERRED_SIZE, 199, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGroup(jPanel20Layout.createSequentialGroup()
-                            .addContainerGap()
+                            .addGap(12, 12, 12)
                             .addComponent(jLabel50)
-                            .addGap(18, 18, 18)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                             .addComponent(jLabel51, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                             .addComponent(jLabel52, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(166, Short.MAX_VALUE))
+                .addContainerGap(164, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel20Layout.createSequentialGroup()
                 .addGap(0, 0, Short.MAX_VALUE)
                 .addGroup(jPanel20Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
@@ -861,7 +860,7 @@ public class dashBoard extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel20Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel53)
-                            .addComponent(jTextField16, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextField16, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel58)
                             .addComponent(jLabel59)
                             .addComponent(jLabel60)
@@ -874,8 +873,8 @@ public class dashBoard extends javax.swing.JFrame {
                         .addComponent(jFormattedTextField9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel20Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(jButton16, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextField17, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButton16)
+                    .addComponent(jTextField17, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel54)
                     .addComponent(jFormattedTextField7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel64)
@@ -886,8 +885,8 @@ public class dashBoard extends javax.swing.JFrame {
                     .addComponent(jLabel55)
                     .addComponent(jLabel56))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 484, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 369, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel20Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel69)
                     .addComponent(jLabel72, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
