@@ -5,11 +5,13 @@
 package gui;
 
 import chart.ModelPolarAreaChart;
+import com.barcodelib.barcode.Linear;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import static gui.HumanResourse.is18OrOlder;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontFormatException;
+import java.awt.Image;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.DefaultComboBoxModel;
@@ -27,6 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javaswingdev.chart.ModelPieChart;
 import javaswingdev.chart.PieChart;
+import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
@@ -1709,7 +1712,8 @@ public class HumanResourse extends javax.swing.JFrame {
         jLabel42.setFont(new java.awt.Font("Segoe UI", 1, 15)); // NOI18N
         jLabel42.setText("xxxxxxxxxxxxxxxxxxxxxxxxx");
 
-        jLabel34.setBackground(new java.awt.Color(255, 204, 204));
+        jLabel34.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel34.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/profile-user (1).png"))); // NOI18N
         jLabel34.setOpaque(true);
 
         jLabel36.setFont(new java.awt.Font("Segoe UI", 0, 10)); // NOI18N
@@ -1805,11 +1809,12 @@ public class HumanResourse extends javax.swing.JFrame {
                             .addComponent(jLabel39)
                             .addComponent(jLabel46))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jLabel47, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jLabel47, javax.swing.GroupLayout.DEFAULT_SIZE, 80, Short.MAX_VALUE))
                     .addGroup(jPanel15Layout.createSequentialGroup()
                         .addGap(39, 39, 39)
-                        .addComponent(jLabel34, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(17, Short.MAX_VALUE))
+                        .addComponent(jLabel34, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout jPanel13Layout = new javax.swing.GroupLayout(jPanel13);
@@ -2313,8 +2318,43 @@ public class HumanResourse extends javax.swing.JFrame {
             jLabel41.setText(String.valueOf(jTable6.getValueAt(row, 9)));
             jLabel44.setText(String.valueOf(jTable6.getValueAt(row, 5)));
             jLabel45.setText(String.valueOf(jTable6.getValueAt(row, 4)));
-            // jLabel46.setText(String.valueOf(jTable6.getValueAt(row,0)));
+            jLabel46.setText(String.valueOf(jTable6.getValueAt(row,0)));
+            try {
+                // Generate the barcode
+                Linear barcode = new Linear();
+                barcode.setType(Linear.CODE128B);
+                barcode.setData(String.valueOf(jTable6.getValueAt(row, 0)));
+                barcode.setI(11.0f);
 
+                // Define file name and path
+                String fname = String.valueOf(jTable6.getValueAt(row, 0));
+                String filePath = "D:\\" + fname + ".png";
+
+                // Render the barcode as a PNG file
+                barcode.renderBarcode(filePath);
+
+                // Load the image file into a JLabel
+                ImageIcon barcodeIcon = new ImageIcon(filePath); // Load the image
+                jLabel47.setIcon(barcodeIcon); // Set it as an icon for the JLabel
+//
+                String profileImagePath = "Employee_NICimages/ProfileImage-" + fname + ".png";
+
+                ImageIcon imageIcon = new ImageIcon(profileImagePath);
+                Image image = imageIcon.getImage(); // Get the image
+
+                if (image.getWidth(null) == -1 || image.getHeight(null) == -1) {
+                    //System.out.println("Image not found or failed to load.");
+                    jLabel34.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/profile-user (1).png")));
+                } else {
+                    //System.out.println("Image loaded successfully.");
+                    Image resizedImage = image.getScaledInstance(jLabel34.getWidth(), jLabel34.getHeight(), Image.SCALE_SMOOTH); // Resize
+                    imageIcon = new ImageIcon(resizedImage); // Update the ImageIcon
+                    jLabel34.setIcon(imageIcon);
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace(); // Print the exception for debugging
+            }
         }
     }//GEN-LAST:event_jTable6MouseClicked
 
@@ -2365,10 +2405,8 @@ public class HumanResourse extends javax.swing.JFrame {
 
             try {
                 jDateChooser4.setDate(new SimpleDateFormat("yyyy-MM-dd").parse(String.valueOf(jTable4.getValueAt(selectRow, 4))));
-
             } catch (ParseException ex) {
                 ex.printStackTrace();
-                //Logger.getLogger(HumanResourse.class.getName()).log(Level.SEVERE, null, ex);
             }
             jFormattedTextField1.setText(String.valueOf(jTable4.getValueAt(selectRow, 5)));
             jTextArea1.setText(String.valueOf(jTable4.getValueAt(selectRow, 6)));

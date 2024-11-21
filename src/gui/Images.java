@@ -101,7 +101,7 @@ public class Images extends javax.swing.JDialog {
             String saveDirectory = "Employee_NICimages/";
             new File(saveDirectory).mkdirs();
             String extension = getFileExtension(selectedFile);
-            String newFileName = saveDirectory + name + "-" + i + extension;
+            String newFileName = saveDirectory + name + "-" + i + ".png";
             File newFile = new File(newFileName);
             try {
                 Files.copy(selectedFile.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
