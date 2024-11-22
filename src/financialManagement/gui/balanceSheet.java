@@ -5,6 +5,7 @@
 package financialManagement.gui;
 
 import java.sql.ResultSet;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 import javax.swing.table.DefaultTableModel;
@@ -14,8 +15,8 @@ public class balanceSheet extends javax.swing.JPanel {
 
     private Date startDate;
     private Date endDate;
-    
-        public balanceSheet(Date startDate, Date endDate) {
+
+    public balanceSheet(Date startDate, Date endDate) {
         this.startDate = startDate;
         this.endDate = endDate;
         initComponents();
@@ -23,27 +24,42 @@ public class balanceSheet extends javax.swing.JPanel {
     }
 
     public void loadBalanceSheet() {
+        // Format dates for SQL if they are not null
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String dateFilter = ""; // Default: No date filter
+        if (startDate != null && endDate != null) {
+            String startDateStr = sdf.format(startDate);
+            String endDateStr = sdf.format(endDate);
+            dateFilter = " WHERE `date` BETWEEN '" + startDateStr + "' AND '" + endDateStr + "'";
+        }
 
         try {
-            ResultSet result = MySQL2.executeSearch("SELECT * FROM `homeowners`.balance_sheet");
+            // Query with optional date filtering
+            String balanceSheetQuery = "SELECT `date`, `description`, `amount` FROM `balance_sheet`" + dateFilter;
+
+            // Execute the query
+            ResultSet result = MySQL2.executeSearch(balanceSheetQuery);
+
+            // Clear and prepare table model
             DefaultTableModel dtm = (DefaultTableModel) jTable1.getModel();
+            dtm.setRowCount(0); // Clear existing rows
             double totalAmount = 0.0; // Variable to store the sum of the amount column
 
+            // Populate rows with query results
             while (result.next()) {
-                Vector vector = new Vector();
-                vector.add(result.getString("date"));
-                vector.add(result.getString("description"));
+                Vector<String> row = new Vector<>();
+                row.add(result.getString("date")); // Add date
+                row.add(result.getString("description")); // Add description
 
                 // Get the amount and add it to the total
                 double amount = result.getDouble("amount");
                 totalAmount += amount;
-                vector.add(String.format("%.2f", amount)); // Format amount to 2 decimal places
-
-                dtm.addRow(vector);
+                row.add(String.format("%.2f", amount)); // Format amount to 2 decimal places
+                dtm.addRow(row);
             }
 
-            // Add the total row
-            Vector totalRow = new Vector();
+            // Add a total row at the end
+            Vector<String> totalRow = new Vector<>();
             totalRow.add(""); // Leave date column empty
             totalRow.add("Total"); // Add "Total" to the description column
             totalRow.add(String.format("%.2f", totalAmount)); // Add the total amount to the amount column
@@ -52,7 +68,6 @@ public class balanceSheet extends javax.swing.JPanel {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     public balanceSheet() {

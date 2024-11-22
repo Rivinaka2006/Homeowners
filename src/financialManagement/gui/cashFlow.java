@@ -4,17 +4,100 @@
  */
 package financialManagement.gui;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Vector;
+import javax.swing.table.DefaultTableModel;
+import model.MySQL2;
+import java.sql.ResultSet;
+
 /**
  *
  * @author User
  */
 public class cashFlow extends javax.swing.JPanel {
 
-    /**
-     * Creates new form cashFlow
-     */
-    public cashFlow() {
+    private Date startDate;
+    private Date endDate;
+
+    public cashFlow(Date startDate, Date endDate) {
+        this.startDate = startDate;
+        this.endDate = endDate;
         initComponents();
+        loadCashFlow();
+    }
+
+    public void loadCashFlow() {
+        // Format dates for SQL if they are not null
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String dateFilter = ""; // Default: No date filter
+        if (startDate != null && endDate != null) {
+            String startDateStr = sdf.format(startDate);
+            String endDateStr = sdf.format(endDate);
+            dateFilter = " WHERE `date` BETWEEN '" + startDateStr + "' AND '" + endDateStr + "'";
+        }
+
+        try {
+            // Query with optional date filtering
+            String cashFlowQuery = "SELECT `date`, `type_id`, `amount` FROM `homeowners`.accounting_entries" + dateFilter;
+
+            // Execute the query
+            ResultSet result = MySQL2.executeSearch(cashFlowQuery);
+
+            // Clear and prepare table model
+            DefaultTableModel dtm = (DefaultTableModel) jTable3.getModel();
+            dtm.setRowCount(0); // Clear existing rows
+
+            double totalInflow = 0.0;   // To store total inflow
+            double totalOutflow = 0.0; // To store total outflow
+            double netCashFlow = 0.0;  // To store cumulative net cash flow
+
+            // Populate rows with query results
+            while (result.next()) {
+                Vector<String> row = new Vector<>();
+                row.add(result.getString("date")); // Add date
+
+                // Determine type and amount
+                int typeId = result.getInt("type_id");
+                double amount = result.getDouble("amount");
+
+                if (typeId == 1) { // Inflow
+                    row.add("Inflow");
+                    row.add(String.format("%.2f", amount)); // Add inflow amount
+                    totalInflow += amount; // Add to total inflow
+                } else if (typeId == 2) { // Outflow
+                    row.add("Outflow");
+                    row.add(String.format("%.2f", amount)); // Add outflow amount
+                    totalOutflow += amount; // Add to total outflow
+                }
+
+                // Calculate net cash flow
+                netCashFlow = totalInflow - totalOutflow;
+                row.add(String.format("%.2f", netCashFlow)); // Add net cash flow
+
+                // Add the row to the table
+                dtm.addRow(row);
+            }
+
+            // Add total row at the end
+            Vector<String> totalRow = new Vector<>();
+            totalRow.add(""); // Leave date column empty
+            totalRow.add("Total"); // Add "Total" to the description column
+            totalRow.add(String.format("%.2f", totalInflow)); // Add total inflow
+            totalRow.add(String.format("%.2f", totalOutflow)); // Add total outflow
+            totalRow.add(String.format("%.2f", netCashFlow)); // Add final net cash flow
+            dtm.addRow(totalRow);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public cashFlow() {
+        this.startDate = startDate;
+        this.endDate = endDate;
+        initComponents();
+        loadCashFlow();
     }
 
     /**
@@ -34,11 +117,11 @@ public class cashFlow extends javax.swing.JPanel {
 
             },
             new String [] {
-                "Date", "Description", "Cash Inflow", "Cash Outflow", " Net Cash Flow "
+                "Date", "Type", "Amount", " Net Cash Flow "
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false
+                false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {

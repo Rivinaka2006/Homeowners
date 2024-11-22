@@ -2807,7 +2807,13 @@ public class Accounting extends javax.swing.JFrame {
             balanceSheet balance = new balanceSheet(startDate, endDate);
             jPanel16.add(balance, BorderLayout.CENTER);
             SwingUtilities.updateComponentTreeUI(jPanel16);
-           // loadBalanceSheet();
+        }
+
+        if (jPanel16.getComponentCount() > 0 && jPanel16.getComponent(0) instanceof cashFlow) {
+            jPanel16.removeAll();
+            cashFlow cashFlow = new cashFlow(startDate, endDate);
+            jPanel16.add(cashFlow, BorderLayout.CENTER);
+            SwingUtilities.updateComponentTreeUI(jPanel16);
         }
 
     }//GEN-LAST:event_jButton15ActionPerformed
