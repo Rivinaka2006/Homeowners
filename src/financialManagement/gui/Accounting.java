@@ -2816,6 +2816,13 @@ public class Accounting extends javax.swing.JFrame {
             SwingUtilities.updateComponentTreeUI(jPanel16);
         }
 
+        if (jPanel16.getComponentCount() > 0 && jPanel16.getComponent(0) instanceof expense) {
+            jPanel16.removeAll();
+            expense expense = new expense(startDate, endDate);
+            jPanel16.add(expense, BorderLayout.CENTER);
+            SwingUtilities.updateComponentTreeUI(jPanel16);
+        }
+
     }//GEN-LAST:event_jButton15ActionPerformed
 
     private void jButton14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton14ActionPerformed

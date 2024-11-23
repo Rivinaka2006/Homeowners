@@ -4,17 +4,105 @@
  */
 package financialManagement.gui;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Vector;
+import javax.swing.table.DefaultTableModel;
+import model.MySQL2;
+import java.sql.ResultSet;
+
 /**
  *
  * @author User
  */
 public class expense extends javax.swing.JPanel {
 
-    /**
-     * Creates new form expense
-     */
-    public expense() {
+    private Date startDate;
+    private Date endDate;
+
+    public expense(Date startDate, Date endDate) {
+        this.startDate = startDate;
+        this.endDate = endDate;
         initComponents();
+        loadExpenses();
+    }
+
+    public void loadExpenses() {
+        // Format dates for SQL if they are not null
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String dateFilter = ""; // Default: No additional date filter
+        if (startDate != null && endDate != null) {
+            String startDateStr = sdf.format(startDate);
+            String endDateStr = sdf.format(endDate);
+            dateFilter = " AND `date` BETWEEN '" + startDateStr + "' AND '" + endDateStr + "'";
+        }
+
+        try {
+            // Query with filtering for expenses (type_id = 2) and optional date filtering
+            String expenseQuery = "SELECT `date`, `description`, `amount`, `category_id` FROM `homeowners`.accounting_entries WHERE `type_id` = '2'" + dateFilter;
+
+            // Execute the query
+            ResultSet result = MySQL2.executeSearch(expenseQuery);
+
+            // Clear and prepare table model
+            DefaultTableModel dtm = (DefaultTableModel) jTable3.getModel();
+            dtm.setRowCount(0); // Clear existing rows
+
+            double totalExpenses = 0.0; // To store the total expenses
+
+            // Populate rows with query results
+            while (result.next()) {
+                Vector<String> row = new Vector<>();
+                row.add(result.getString("date")); // Add date
+                row.add(result.getString("description")); // Add description
+
+                // Get category_id and determine category label
+                int categoryId = result.getInt("category_id");
+                String categoryLabel = "";
+                switch (categoryId) {
+                    case 1:
+                        categoryLabel = "Revenue & Sales";
+                        break;
+                    case 2:
+                        categoryLabel = "Operating Expenses";
+                        break;
+                    case 3:
+                        categoryLabel = "Marketing & Advertising";
+                        break;
+                    default:
+                        categoryLabel = "Uncategorized";
+                }
+                row.add(categoryLabel); // Add category label
+
+                // Add amount
+                double amount = result.getDouble("amount");
+                row.add(String.format("%.2f", amount)); // Format amount to 2 decimal places
+
+                // Accumulate total expenses
+                totalExpenses += amount;
+
+                // Add the row to the table
+                dtm.addRow(row);
+            }
+
+            // Add total row at the end
+            Vector<String> totalRow = new Vector<>();
+            totalRow.add(""); // Leave date column empty
+            totalRow.add("Total"); // Add "Total" to description column
+            totalRow.add(""); // Leave category column empty
+            totalRow.add(String.format("%.2f", totalExpenses)); // Add total expenses
+            dtm.addRow(totalRow);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public expense() {
+        this.startDate = startDate;
+        this.endDate = endDate;
+        initComponents();
+        loadExpenses();
     }
 
     /**
