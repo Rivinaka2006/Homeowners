@@ -53,6 +53,7 @@ public class Accounting extends javax.swing.JFrame {
     private static HashMap<String, String> transactionCategoryMap = new HashMap<>();
     private static HashMap<String, String> paymentMethodMap = new HashMap<>();
     private static HashMap<String, Integer> budgetCategoryMap = new HashMap<>();
+    private static HashMap<String, String> auditActionMap = new HashMap<>();
 
     public void scheduleBudgetDeactivation() {
 
@@ -547,6 +548,77 @@ public class Accounting extends javax.swing.JFrame {
         jDateChooser14.setEnabled(false);
     }
 
+    private void loadAuditTrail() {
+        try {
+            // Base query with always-true condition
+            String query = "SELECT * FROM `audit_logs` "
+                    + "INNER JOIN `user` ON `audit_logs`.user_id = `user`.id "
+                    + "INNER JOIN `action_type` ON `audit_logs`.action_type_id = `action_type`.id "
+                    + "WHERE 1=1 ";
+
+            // Get filter values
+            Date startDate = jDateChooser4.getDate();
+            Date endDate = jDateChooser5.getDate();
+            String selectedAction = String.valueOf(jComboBox10.getSelectedItem());
+
+            // SimpleDateFormat to convert dates into MySQL format (YYYY-MM-DD)
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+            // Apply date filter if provided
+            if (startDate != null && endDate != null) {
+                String startDateString = dateFormat.format(startDate);
+                String endDateString = dateFormat.format(endDate);
+                query += "AND `audit_logs`.`date` BETWEEN '" + startDateString + "' AND '" + endDateString + "' ";
+            }
+
+            // Apply action filter if a valid action is selected
+            if (!selectedAction.equals("All")) { // Assuming "All" means no filtering
+                query += "AND `action_type`.`action` = '" + selectedAction + "' ";
+            }
+
+            // Execute the query with filters
+            ResultSet resultSet = MySQL2.executeSearch(query);
+
+            // Clear the table before loading new data
+            DefaultTableModel model = (DefaultTableModel) jTable4.getModel();
+            model.setRowCount(0);
+
+            // Load filtered results into the table
+            while (resultSet.next()) {
+                Vector<String> vector = new Vector<>();
+                vector.add(resultSet.getString("date"));
+                vector.add(resultSet.getString("username"));
+                vector.add(resultSet.getString("action"));
+                vector.add(resultSet.getString("details"));
+                model.addRow(vector);
+            }
+
+            loadAuditActions();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadAuditActions() {
+        try {
+            ResultSet resultSet = MySQL2.executeSearch("SELECT * FROM `action_type`");
+            Vector<String> vector = new Vector();
+            vector.add("Select");
+
+            while (resultSet.next()) {
+                vector.add(resultSet.getString("action"));
+                auditActionMap.put(resultSet.getString("action"), resultSet.getString("id"));
+            }
+
+            DefaultComboBoxModel model = new DefaultComboBoxModel(vector);
+            jComboBox10.setModel(model);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private void loadBarCharts() {
         //bar chart 1 
         //chart1.addLegend("Budget", new Color(255, 51, 0));
@@ -591,6 +663,7 @@ public class Accounting extends javax.swing.JFrame {
         loadPieCharts();
         setBudgetStartDate();
         loadIncomeStatements();
+        loadAuditTrail();
     }
 
     private void initData() {
@@ -712,8 +785,6 @@ public class Accounting extends javax.swing.JFrame {
         jDateChooser4 = new com.toedter.calendar.JDateChooser();
         jLabel25 = new javax.swing.JLabel();
         jDateChooser5 = new com.toedter.calendar.JDateChooser();
-        jLabel27 = new javax.swing.JLabel();
-        jComboBox7 = new javax.swing.JComboBox<>();
         jLabel28 = new javax.swing.JLabel();
         jComboBox10 = new javax.swing.JComboBox<>();
         jPanel24 = new javax.swing.JPanel();
@@ -1634,6 +1705,11 @@ public class Accounting extends javax.swing.JFrame {
         jButton16.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jButton16.setForeground(new java.awt.Color(255, 255, 255));
         jButton16.setText("Filter");
+        jButton16.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton16ActionPerformed(evt);
+            }
+        });
 
         jLabel26.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jLabel26.setForeground(new java.awt.Color(0, 0, 0));
@@ -1647,12 +1723,6 @@ public class Accounting extends javax.swing.JFrame {
         jLabel25.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jLabel25.setForeground(new java.awt.Color(0, 0, 0));
         jLabel25.setText("End Date");
-
-        jLabel27.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
-        jLabel27.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel27.setText("User");
-
-        jComboBox7.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
         jLabel28.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jLabel28.setForeground(new java.awt.Color(0, 0, 0));
@@ -1684,14 +1754,10 @@ public class Accounting extends javax.swing.JFrame {
                         .addComponent(jDateChooser5, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jButton16, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(36, 36, 36)
-                .addComponent(jLabel27)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jComboBox7, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(36, 36, 36)
                 .addComponent(jLabel28)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jComboBox10, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(242, Short.MAX_VALUE))
         );
         jPanel23Layout.setVerticalGroup(
             jPanel23Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1709,8 +1775,6 @@ public class Accounting extends javax.swing.JFrame {
                                 .addComponent(jDateChooser5, javax.swing.GroupLayout.DEFAULT_SIZE, 26, Short.MAX_VALUE)
                                 .addComponent(jDateChooser4, javax.swing.GroupLayout.DEFAULT_SIZE, 26, Short.MAX_VALUE)
                                 .addGroup(jPanel23Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(jLabel27)
-                                    .addComponent(jComboBox7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(jLabel28)
                                     .addComponent(jComboBox10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addComponent(jLabel25, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
@@ -2844,6 +2908,11 @@ public class Accounting extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jButton14ActionPerformed
 
+    private void jButton16ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton16ActionPerformed
+        //Filter Audits
+        loadAuditTrail();
+    }//GEN-LAST:event_jButton16ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -2911,7 +2980,6 @@ public class Accounting extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> jComboBox3;
     private javax.swing.JComboBox<String> jComboBox5;
     private javax.swing.JComboBox<String> jComboBox6;
-    private javax.swing.JComboBox<String> jComboBox7;
     private javax.swing.JComboBox<String> jComboBox8;
     private com.toedter.calendar.JDateChooser jDateChooser1;
     private com.toedter.calendar.JDateChooser jDateChooser10;
@@ -2949,7 +3017,6 @@ public class Accounting extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel24;
     private javax.swing.JLabel jLabel25;
     private javax.swing.JLabel jLabel26;
-    private javax.swing.JLabel jLabel27;
     private javax.swing.JLabel jLabel28;
     private javax.swing.JLabel jLabel29;
     private javax.swing.JLabel jLabel3;
