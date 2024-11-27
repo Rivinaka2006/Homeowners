@@ -42,6 +42,8 @@ import javax.swing.table.DefaultTableModel;
 import model.MySQL2;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -560,6 +562,7 @@ public class Accounting extends javax.swing.JFrame {
             Date startDate = jDateChooser4.getDate();
             Date endDate = jDateChooser5.getDate();
             String selectedAction = String.valueOf(jComboBox10.getSelectedItem());
+            String userName = jTextField3.getText().trim();
 
             // SimpleDateFormat to convert dates into MySQL format (YYYY-MM-DD)
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -572,8 +575,13 @@ public class Accounting extends javax.swing.JFrame {
             }
 
             // Apply action filter if a valid action is selected
-            if (!selectedAction.equals("All")) { // Assuming "All" means no filtering
+            if (!selectedAction.equals("Select")) { // Assuming "Select" means no filtering
                 query += "AND `action_type`.`action` = '" + selectedAction + "' ";
+            }
+
+            // Apply username filter for partial matches
+            if (!userName.isEmpty()) {
+                query += "AND `user`.`username` LIKE '%" + userName + "%' ";
             }
 
             // Execute the query with filters
@@ -787,6 +795,7 @@ public class Accounting extends javax.swing.JFrame {
         jDateChooser5 = new com.toedter.calendar.JDateChooser();
         jLabel28 = new javax.swing.JLabel();
         jComboBox10 = new javax.swing.JComboBox<>();
+        jButton29 = new javax.swing.JButton();
         jPanel24 = new javax.swing.JPanel();
         jScrollPane6 = new javax.swing.JScrollPane();
         jTable4 = new javax.swing.JTable();
@@ -1719,6 +1728,11 @@ public class Accounting extends javax.swing.JFrame {
         jButton17.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jButton17.setForeground(new java.awt.Color(255, 255, 255));
         jButton17.setText("Search");
+        jButton17.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton17ActionPerformed(evt);
+            }
+        });
 
         jLabel25.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jLabel25.setForeground(new java.awt.Color(0, 0, 0));
@@ -1728,7 +1742,17 @@ public class Accounting extends javax.swing.JFrame {
         jLabel28.setForeground(new java.awt.Color(0, 0, 0));
         jLabel28.setText("Action");
 
-        jComboBox10.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        jComboBox10.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Select" }));
+
+        jButton29.setBackground(new java.awt.Color(255, 102, 0));
+        jButton29.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
+        jButton29.setForeground(new java.awt.Color(255, 255, 255));
+        jButton29.setText("Clear");
+        jButton29.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton29ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel23Layout = new javax.swing.GroupLayout(jPanel23);
         jPanel23.setLayout(jPanel23Layout);
@@ -1754,9 +1778,12 @@ public class Accounting extends javax.swing.JFrame {
                         .addComponent(jDateChooser5, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jButton16, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(36, 36, 36)
-                .addComponent(jLabel28)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jComboBox10, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel23Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel23Layout.createSequentialGroup()
+                        .addComponent(jLabel28)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jComboBox10, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jButton29, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(242, Short.MAX_VALUE))
         );
         jPanel23Layout.setVerticalGroup(
@@ -1782,7 +1809,8 @@ public class Accounting extends javax.swing.JFrame {
                 .addGroup(jPanel23Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton16)
                     .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton17))
+                    .addComponent(jButton17)
+                    .addComponent(jButton29))
                 .addContainerGap())
         );
 
@@ -2511,10 +2539,16 @@ public class Accounting extends javax.swing.JFrame {
                     updateBudgetTotal(categoryId, Double.parseDouble(amount));
                 }
 
+                LocalDateTime specificDateTime = LocalDateTime.of(2024, 11, 27, 15, 30, 45);
+
+                MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
+                        + "('" + specificDateTime + "', '1', 'Created Transaction for " + category + "','1')");
+
                 loadEntries();
                 clearLedgerEntries();
                 generateReferenceNumber();
                 checkBudgetExceeding();
+                loadAuditTrail();
             }
 
         } catch (Exception e) {
@@ -2558,6 +2592,7 @@ public class Accounting extends javax.swing.JFrame {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                 String endDateStr = dateFormat.format(endDate);
                 String status = String.valueOf(jTable2.getValueAt(row, 6));
+                LocalDateTime specificDateTime = LocalDateTime.of(2024, 11, 27, 15, 30, 45);
 
                 if (!"Active".equals(status)) {
                     JOptionPane.showMessageDialog(this, "Cannot Update Budget is Inactive", "Warning", JOptionPane.WARNING_MESSAGE);
@@ -2566,6 +2601,10 @@ public class Accounting extends javax.swing.JFrame {
                             + "`category_id` = '" + budgetCategoryMap.get(category) + "', `amount` = '" + amount + "', `description` = '" + description + "',"
                             + " `status` = 'Active',`end_date`='" + endDateStr + "' WHERE `id`='" + selectedRow + "'");
 
+                    MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
+                            + "('" + specificDateTime + "', '3', 'Updated Budget for  " + category + "','1')");
+
+                    loadAuditTrail();
                     loadBudgets("Select");
                     clearBudgetEntries();
                 }
@@ -2635,6 +2674,13 @@ public class Accounting extends javax.swing.JFrame {
                 } catch (NumberFormatException e) {
                     JOptionPane.showMessageDialog(this, "Please enter a valid amount.");
                 }
+
+                LocalDateTime specificDateTime = LocalDateTime.of(2024, 11, 27, 15, 30, 45);
+
+                MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
+                        + "('" + specificDateTime + "', '2', 'Created Transaction for " + category + "','2')");
+
+                loadAuditTrail();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -2644,6 +2690,8 @@ public class Accounting extends javax.swing.JFrame {
     private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
         // Delete Budget
         int selectedRowCount = jTable2.getSelectedRowCount();
+        LocalDateTime specificDateTime = LocalDateTime.of(2024, 11, 27, 15, 30, 45);
+        String category = String.valueOf(jComboBox6.getSelectedItem());
 
         if (selectedRowCount == 0) {
             JOptionPane.showMessageDialog(this, "Select a budget to delete", "Warning", JOptionPane.WARNING_MESSAGE);
@@ -2669,6 +2717,11 @@ public class Accounting extends javax.swing.JFrame {
                     loadBudgets("Select");
                     clearBudgetEntries();
                     JOptionPane.showMessageDialog(this, "Entry deleted successfully.", "Deleted", JOptionPane.INFORMATION_MESSAGE);
+
+                    MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
+                            + "('" + specificDateTime + "', '4', 'Deleted Budget  " + category + "','1')");
+
+                    loadAuditTrail();
                 }
 
             } catch (Exception e) {
@@ -2891,20 +2944,58 @@ public class Accounting extends javax.swing.JFrame {
 
     private void jButton14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton14ActionPerformed
         // Generate Reports
+        LocalDateTime specificDateTime = LocalDateTime.of(2024, 11, 27, 15, 30, 45);
+
         if (jPanel16.getComponentCount() > 0 && jPanel16.getComponent(0) instanceof incomeStatement) {
             System.out.println("Print Income Statements");
+
+            try {
+                MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
+                        + "('" + specificDateTime + "', '5', 'Generated Income Statement Report','2')");
+
+                loadAuditTrail();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         if (jPanel16.getComponentCount() > 0 && jPanel16.getComponent(0) instanceof balanceSheet) {
             System.out.println("Print Balance Sheet' ");
+
+            try {
+                MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
+                        + "('" + specificDateTime + "', '5', 'Generated Balance Sheet Report','2')");
+
+                loadAuditTrail();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         if (jPanel16.getComponentCount() > 0 && jPanel16.getComponent(0) instanceof cashFlow) {
             System.out.println("Print CashFlow Statements' ");
+
+            try {
+                MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
+                        + "('" + specificDateTime + "', '5', 'Generated Cash Flow Report','2')");
+
+                loadAuditTrail();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         if (jPanel16.getComponentCount() > 0 && jPanel16.getComponent(0) instanceof expense) {
             System.out.println("Print Expense Reports ");
+
+            try {
+                MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
+                        + "('" + specificDateTime + "', '5', 'Generated Expense Report','2')");
+
+                loadAuditTrail();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }//GEN-LAST:event_jButton14ActionPerformed
 
@@ -2912,6 +3003,16 @@ public class Accounting extends javax.swing.JFrame {
         //Filter Audits
         loadAuditTrail();
     }//GEN-LAST:event_jButton16ActionPerformed
+
+    private void jButton17ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton17ActionPerformed
+        // Search User
+        loadAuditTrail();
+    }//GEN-LAST:event_jButton17ActionPerformed
+
+    private void jButton29ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton29ActionPerformed
+        // Clear Audit Trail
+        clearAuditTrail();
+    }//GEN-LAST:event_jButton29ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -2962,6 +3063,7 @@ public class Accounting extends javax.swing.JFrame {
     private javax.swing.JButton jButton26;
     private javax.swing.JButton jButton27;
     private javax.swing.JButton jButton28;
+    private javax.swing.JButton jButton29;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
@@ -3133,5 +3235,12 @@ public class Accounting extends javax.swing.JFrame {
         jDateChooser15.setDate(null);
         jDateChooser14.setEnabled(true);
         jTable2.setSelectionMode(0);
+    }
+
+    private void clearAuditTrail() {
+        jTextField3.setText("");
+        jDateChooser4.setDate(null);
+        jDateChooser5.setDate(null);
+        jComboBox10.setSelectedItem("Select");
     }
 }

@@ -56,6 +56,10 @@ public class expense extends javax.swing.JPanel {
                 row.add(result.getString("date")); // Add date
                 row.add(result.getString("description")); // Add description
 
+                // Add amount
+                double amount = result.getDouble("amount");
+                row.add(String.format("%.2f", amount)); // Format amount to 2 decimal places
+
                 // Get category_id and determine category label
                 int categoryId = result.getInt("category_id");
                 String categoryLabel = "";
@@ -73,10 +77,6 @@ public class expense extends javax.swing.JPanel {
                         categoryLabel = "Uncategorized";
                 }
                 row.add(categoryLabel); // Add category label
-
-                // Add amount
-                double amount = result.getDouble("amount");
-                row.add(String.format("%.2f", amount)); // Format amount to 2 decimal places
 
                 // Accumulate total expenses
                 totalExpenses += amount;
