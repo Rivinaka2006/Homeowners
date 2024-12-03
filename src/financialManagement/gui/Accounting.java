@@ -4,6 +4,7 @@ import chart.ModelPolarAreaChart;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.raven.chart.ModelChart;
 import com.raven.model.ModelCard;
+import com.raven.model.ModelCard1;
 import com.raven.swing.icon.GoogleMaterialDesignIcons;
 import com.raven.swing.icon.IconFontSwing;
 import java.awt.BorderLayout;
@@ -42,8 +43,7 @@ import javax.swing.table.DefaultTableModel;
 import model.MySQL2;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.sql.Statement;
 
 /**
  *
@@ -183,7 +183,7 @@ public class Accounting extends javax.swing.JFrame {
             e.printStackTrace();
         }
     }
-
+ 
     private void loadTransactionCategory() {
         try {
             ResultSet resultSet = MySQL2.executeSearch("SELECT * FROM `category`");
@@ -639,7 +639,7 @@ public class Accounting extends javax.swing.JFrame {
         //chart1.addData(new ModelChart("June", new double[]{190, 280, 81, 200}));
         //bar chart 2
         chart2.addLegend("Total Audits", new Color(255, 51, 0));
-        chart2.addLegend("Compliance Status", new Color(255, 165, 0));
+        //chart2.addLegend("Compliance Status", new Color(255, 165, 0));
         chart2.addLegend("Pending Actions", new Color(255, 102, 51));
         chart2.addData(new ModelChart("January", new double[]{450, 720, 60, 130}));
         chart2.addData(new ModelChart("February", new double[]{600, 750, 90, 150}));
@@ -651,9 +651,65 @@ public class Accounting extends javax.swing.JFrame {
 
     private void loadPieCharts() {
         //pie chart 1 
-        polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(255, 51, 0), "Total Audits", 40));
-        polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(255, 165, 0), "Compliance Status", 30));
-        polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(255, 102, 51), "Pending Actions", 30));
+        polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(255, 51, 0), "Total Audits", 60));
+        // polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(255, 165, 0), "Compliance Status", 30));
+        polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(255, 102, 51), "Pending Actions", 40));
+    }
+
+    private Integer calculateTotalAudits() {
+        Integer rowCount = null;
+        try {
+            ResultSet result = MySQL2.executeSearch("SELECT COUNT(*) AS row_count FROM `audit_logs`");
+            if (result.next()) {
+                rowCount = result.getInt("row_count");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return rowCount;
+    }
+
+    public String getCompliantStatus() {
+        String status = "Non-Compliant"; // Set the default string to "Non-Compliant"
+        try {
+            String query = "SELECT COUNT(*) as statusCount FROM compliance_dashboard "
+                    + "WHERE compliance_status_id = (SELECT id FROM compliance_status WHERE `status` = 'Non-Compliant')";
+            Statement stmt = MySQL2.getConnection().createStatement();
+            ResultSet resultSet = stmt.executeQuery(query);
+            if (resultSet.next()) {
+                // Check if count is greater than 0
+                int count = resultSet.getInt("statusCount");
+                if (count > 0) {
+                    status = "Non-Compliant"; // Set the status based on query result
+                } else {
+                    status = "Compliant"; // If no matching records, set to "Compliant"
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return status;
+    }
+
+    public void loadCompliance() {
+        try {
+            ResultSet resultSet = MySQL2.executeSearch("SELECT * FROM `compliance_dashboard` INNER JOIN `compliance_status` ON "
+                    + "`compliance_dashboard`.compliance_status_id = `compliance_status`.id");
+
+            DefaultTableModel model = (DefaultTableModel) jTable5.getModel();
+            model.setRowCount(0);
+
+            while (resultSet.next()) {
+                Vector<String> vector = new Vector<>();
+                vector.add(resultSet.getString("date"));
+                vector.add(resultSet.getString("audit_type"));
+                vector.add(resultSet.getString("status"));
+                model.addRow(vector);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public Accounting() {
@@ -672,6 +728,7 @@ public class Accounting extends javax.swing.JFrame {
         setBudgetStartDate();
         loadIncomeStatements();
         loadAuditTrail();
+        loadCompliance();
     }
 
     private void initData() {
@@ -679,10 +736,15 @@ public class Accounting extends javax.swing.JFrame {
     }
 
     private void initCardData() {
+        // Total Audits Card
         Icon icon1 = IconFontSwing.buildIcon(GoogleMaterialDesignIcons.FACT_CHECK, 60, new Color(255, 255, 255, 100), new Color(255, 255, 255, 15));
-        card1.setData(new ModelCard("Total Audits", 25000, 20, icon1));
+        card1.setData(new ModelCard("Total Audits", calculateTotalAudits(), 20, icon1));
+
+        // Compliance Status Card
         Icon icon2 = IconFontSwing.buildIcon(GoogleMaterialDesignIcons.VERIFIED, 60, new Color(255, 255, 255, 100), new Color(255, 255, 255, 15));
-        card2.setData(new ModelCard("Compliance Status", 300, 30, icon2));
+        card2.setData(new ModelCard1("Compliance Status", getCompliantStatus(), 30, icon2));
+
+        //
         Icon icon3 = IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ALARM, 60, new Color(255, 255, 255, 100), new Color(255, 255, 255, 15));
         card3.setData(new ModelCard("Pending Actions", 13, 80, icon3));
     }
@@ -802,8 +864,9 @@ public class Accounting extends javax.swing.JFrame {
         jPanel19 = new javax.swing.JPanel();
         jPanel25 = new javax.swing.JPanel();
         card1 = new com.raven.component.Card();
-        card2 = new com.raven.component.Card();
         card3 = new com.raven.component.Card();
+        card2 = new com.raven.component.Card1();
+        jButton30 = new javax.swing.JButton();
         jPanel26 = new javax.swing.JPanel();
         chart2 = new com.raven.chart.Chart();
         jLabel29 = new javax.swing.JLabel();
@@ -896,7 +959,7 @@ public class Accounting extends javax.swing.JFrame {
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1038, Short.MAX_VALUE)
+            .addGap(0, 1287, Short.MAX_VALUE)
         );
 
         jTabbedPane1.addTab("Main", jPanel2);
@@ -1080,7 +1143,7 @@ public class Accounting extends javax.swing.JFrame {
                 .addComponent(jButton4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jButton2)
-                .addContainerGap(457, Short.MAX_VALUE))
+                .addContainerGap(72, Short.MAX_VALUE))
         );
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
@@ -1112,7 +1175,9 @@ public class Accounting extends javax.swing.JFrame {
         );
         jPanel9Layout.setVerticalGroup(
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+            .addGroup(jPanel9Layout.createSequentialGroup()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 606, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 620, Short.MAX_VALUE))
         );
 
         jPanel10.setBackground(new java.awt.Color(255, 255, 255));
@@ -1193,15 +1258,17 @@ public class Accounting extends javax.swing.JFrame {
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+            .addGroup(jPanel4Layout.createSequentialGroup()
                 .addGap(4, 4, 4)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(4, 4, 4)
-                        .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(4, 4, 4))
+                        .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(4, 4, 4))))
         );
 
         jTabbedPane1.addTab("Accounting", jPanel4);
@@ -1695,7 +1762,7 @@ public class Accounting extends javax.swing.JFrame {
                 .addComponent(jPanel16, javax.swing.GroupLayout.PREFERRED_SIZE, 427, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel17, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(353, Short.MAX_VALUE))
+                .addContainerGap(602, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Financial Reports", jPanel14);
@@ -1846,7 +1913,7 @@ public class Accounting extends javax.swing.JFrame {
                 .addGap(4, 4, 4)
                 .addComponent(jPanel23, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(4, 4, 4)
-                .addComponent(jPanel24, javax.swing.GroupLayout.DEFAULT_SIZE, 872, Short.MAX_VALUE)
+                .addComponent(jPanel24, javax.swing.GroupLayout.DEFAULT_SIZE, 1121, Short.MAX_VALUE)
                 .addGap(4, 4, 4))
         );
 
@@ -1859,11 +1926,21 @@ public class Accounting extends javax.swing.JFrame {
         card1.setBackground(new java.awt.Color(255, 51, 0));
         card1.setColorGradient(new java.awt.Color(255, 102, 51));
 
+        card3.setBackground(new java.awt.Color(255, 51, 0));
+        card3.setColorGradient(new java.awt.Color(255, 102, 51));
+
         card2.setBackground(new java.awt.Color(255, 51, 0));
         card2.setColorGradient(new java.awt.Color(255, 102, 51));
 
-        card3.setBackground(new java.awt.Color(255, 51, 0));
-        card3.setColorGradient(new java.awt.Color(255, 102, 51));
+        jButton30.setBackground(new java.awt.Color(255, 51, 0));
+        jButton30.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
+        jButton30.setForeground(new java.awt.Color(255, 255, 255));
+        jButton30.setText("Add Compliance");
+        jButton30.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton30ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel25Layout = new javax.swing.GroupLayout(jPanel25);
         jPanel25.setLayout(jPanel25Layout);
@@ -1872,20 +1949,24 @@ public class Accounting extends javax.swing.JFrame {
             .addGroup(jPanel25Layout.createSequentialGroup()
                 .addGap(16, 16, 16)
                 .addComponent(card1, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(60, 60, 60)
+                .addGap(44, 44, 44)
                 .addComponent(card2, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(60, 60, 60)
+                .addGap(45, 45, 45)
                 .addComponent(card3, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(34, 34, 34)
+                .addComponent(jButton30, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jPanel25Layout.setVerticalGroup(
             jPanel25Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel25Layout.createSequentialGroup()
+            .addGroup(jPanel25Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel25Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(card3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(card2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(card1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel25Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(card2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(card3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(card1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jButton30, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
@@ -2228,7 +2309,7 @@ public class Accounting extends javax.swing.JFrame {
             .addGroup(jPanel21Layout.createSequentialGroup()
                 .addComponent(jPanel34, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel35, javax.swing.GroupLayout.DEFAULT_SIZE, 939, Short.MAX_VALUE))
+                .addComponent(jPanel35, javax.swing.GroupLayout.DEFAULT_SIZE, 1188, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Alerts and Notifications", jPanel21);
@@ -2466,7 +2547,7 @@ public class Accounting extends javax.swing.JFrame {
                         .addComponent(jPanel32, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel33, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addContainerGap(310, Short.MAX_VALUE))
+                .addContainerGap(559, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Reporting Tools", jPanel22);
@@ -3014,6 +3095,12 @@ public class Accounting extends javax.swing.JFrame {
         clearAuditTrail();
     }//GEN-LAST:event_jButton29ActionPerformed
 
+    private void jButton30ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton30ActionPerformed
+        // View Add Compliance UI
+        addCompliance addCompliance = new addCompliance(this, rootPaneCheckingEnabled);
+        addCompliance.setVisible(true);
+    }//GEN-LAST:event_jButton30ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -3038,7 +3125,7 @@ public class Accounting extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private com.raven.component.Card card1;
-    private com.raven.component.Card card2;
+    private com.raven.component.Card1 card2;
     private com.raven.component.Card card3;
     private com.raven.chart.Chart chart1;
     private com.raven.chart.Chart chart2;
@@ -3065,6 +3152,7 @@ public class Accounting extends javax.swing.JFrame {
     private javax.swing.JButton jButton28;
     private javax.swing.JButton jButton29;
     private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButton30;
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
     private javax.swing.JButton jButton6;
