@@ -180,11 +180,11 @@ public class ProductSelect extends javax.swing.JFrame {
 
             int row = jTable1.getSelectedRow();
 
-            grn.getjTextField18().setText(String.valueOf(jTable1.getValueAt(row, 0)));
-            grn.getjLabel66().setText(String.valueOf(jTable1.getValueAt(row, 1)));
-            grn.getjLabel59().setText(String.valueOf(jTable1.getValueAt(row, 2)));
-            grn.getjLabel62().setText(String.valueOf(jTable1.getValueAt(row, 4)));
-            grn.getjLabel61().setText(String.valueOf(jTable1.getValueAt(row, 5)));
+            grn.getjTextField3().setText(String.valueOf(jTable1.getValueAt(row, 0)));
+            grn.getjLabel17().setText(String.valueOf(jTable1.getValueAt(row, 1)));
+            grn.getjLabel10().setText(String.valueOf(jTable1.getValueAt(row, 2)));
+            grn.getjLabel13().setText(String.valueOf(jTable1.getValueAt(row, 4)));
+            grn.getjLabel12().setText(String.valueOf(jTable1.getValueAt(row, 5)));
 
             this.dispose();
 

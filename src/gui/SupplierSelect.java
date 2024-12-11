@@ -176,8 +176,8 @@ public class SupplierSelect extends javax.swing.JFrame {
 
             int row = jTable1.getSelectedRow();
 
-            grn.getjTextField17().setText(String.valueOf(jTable1.getValueAt(row, 0)));
-            grn.getjLabel56().setText(String.valueOf(jTable1.getValueAt(row, 3)));
+            grn.getjTextField2().setText(String.valueOf(jTable1.getValueAt(row, 0)));
+            grn.getjLabel7().setText(String.valueOf(jTable1.getValueAt(row, 3)));
 
             this.dispose();
 
