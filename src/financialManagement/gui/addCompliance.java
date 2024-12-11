@@ -4,7 +4,6 @@
  */
 package financialManagement.gui;
 
-import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Vector;
 import javax.swing.DefaultComboBoxModel;
@@ -14,15 +13,20 @@ import java.util.Date;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import javax.swing.JOptionPane;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
  *
  * @author User
  */
 public class addCompliance extends javax.swing.JDialog {
-    
+
+    Accounting accounting = new Accounting();
+    private int complianceId;
+
     private static HashMap<String, String> responsibleUsersMap = new HashMap<>();
-    
+
     private void loadResponsibleUsers() {
         try {
             // Execute the query to fetch distinct usernames and their IDs
@@ -31,29 +35,29 @@ public class addCompliance extends javax.swing.JDialog {
                     + "FROM `audit_logs` "
                     + "INNER JOIN `user` ON `audit_logs`.user_id = `user`.id"
             );
-            
+
             Vector<String> vector = new Vector<>();
             vector.add("Select");
-            
+
             responsibleUsersMap.clear();
-            
+
             while (resultSet.next()) {
                 String username = resultSet.getString("username");
                 String userId = resultSet.getString("id");
-                
+
                 vector.add(username);
-                
+
                 responsibleUsersMap.put(username, userId);
             }
-            
+
             DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>(vector);
             jComboBox3.setModel(model);
-            
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    
+
     private void loadDate() {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -64,18 +68,103 @@ public class addCompliance extends javax.swing.JDialog {
             e.printStackTrace();
         }
     }
-    
+
     private void restrictDateChooserToFutureDates() {
         Date today = new Date();
         jDateChooser2.setMinSelectableDate(today);
     }
-    
-    public addCompliance(java.awt.Frame parent, boolean modal) {
+
+    private void loadSelectedData() {
+        // Get the selected ID (assuming it's set when the dialog is initialized)
+        // This variable should be set in the constructor or elsewhere
+
+        // Define the SQL query
+        String query = "SELECT `date`, `audit_type`, `compliance_status_id`, `responsible_party`, `deadline`, `findings`, `actions_taken`, `document_link` "
+                + "FROM `homeowners`.`compliance_dashboard` WHERE `id` = '" + complianceId + "'";
+
+        // Use MySQL2 to execute the query with a prepared statement and the 'id' parameter
+        try (ResultSet rs = MySQL2.executeSearch(query)) {
+            if (rs != null && rs.next()) {
+                // Get values from the result set
+                java.sql.Date sqlDate = rs.getDate("date");
+                String auditType = rs.getString("audit_type");
+                int complianceStatusId = rs.getInt("compliance_status_id");
+                String responsibleParty = rs.getString("responsible_party");
+                java.sql.Date sqlDeadline = rs.getDate("deadline");
+                String findings = rs.getString("findings");
+                String actionsTaken = rs.getString("actions_taken");
+                String documentLink = rs.getString("document_link");
+
+                // Set the values to the fields
+                // Set Date to jDateChooser1
+                jDateChooser1.setDate(sqlDate);
+
+                // Set Audit Type to jComboBox2
+                jComboBox2.setSelectedItem(auditType);
+
+                // Set Responsible Party to jComboBox3
+                jComboBox3.setSelectedItem(responsibleParty);
+
+                // Set Deadline to jDateChooser2
+                jDateChooser2.setDate(sqlDeadline);
+
+                // Set Findings to jTextField1
+                jTextField1.setText(findings);
+
+                // Set Actions Taken to jTextField2
+                jTextField2.setText(actionsTaken);
+
+                // Set Document Link to jTextField3
+                jTextField3.setText(documentLink);
+
+                // Set Status to jComboBox1
+                for (int i = 0; i < jComboBox1.getItemCount(); i++) {
+                    // Assuming jComboBox1 contains the possible status values as integers or strings
+                    if (jComboBox1.getItemAt(i).equals(complianceStatusId)) {
+                        jComboBox1.setSelectedIndex(i);
+                        break;
+                    }
+                }
+            } else {
+                // If no data is found for the given ID
+                System.out.println("No data found for ID: " + complianceId);
+            }
+        } catch (SQLException e) {
+            // Handle SQL exception
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void checkUpdateOrAdd() {
+
+        if (complianceId == -1) {
+            jButton2.setEnabled(false);
+        } else {
+            jButton1.setEnabled(false);
+            jButton2.setEnabled(true);
+            jButton3.setEnabled(false);
+            jComboBox2.setEnabled(false);
+            jComboBox3.setEnabled(false);
+            jDateChooser2.setEnabled(false);
+            jTextField1.setEditable(false);
+            jTextField2.setEditable(false);
+            jTextField3.setEditable(false);
+            jComboBox1.grabFocus();
+        }
+    }
+
+    public addCompliance(java.awt.Frame parent, boolean modal, int complianceId) {
         super(parent, modal);
+        this.complianceId = complianceId;
         initComponents();
         loadResponsibleUsers();
         loadDate();
+        loadSelectedData();
+        checkUpdateOrAdd();
         restrictDateChooserToFutureDates();
+        //System.out.println("The compliance ID passed to addCompliance is: " + complianceId);
     }
 
     /**
@@ -132,6 +221,11 @@ public class addCompliance extends javax.swing.JDialog {
         jButton2.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jButton2.setForeground(new java.awt.Color(255, 255, 255));
         jButton2.setText("Update");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
 
         jButton3.setBackground(new java.awt.Color(255, 51, 0));
         jButton3.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
@@ -205,16 +299,12 @@ public class addCompliance extends javax.swing.JDialog {
                                     .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                     .addComponent(jLabel5, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                     .addComponent(jLabel6, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addGap(18, 18, 18)
                                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addGap(18, 18, 18)
-                                        .addComponent(jDateChooser2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                    .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addGap(18, 18, 18)
-                                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(jComboBox3, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                            .addComponent(jDateChooser1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                            .addComponent(jComboBox2, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
+                                    .addComponent(jDateChooser2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jComboBox3, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jDateChooser1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jComboBox2, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -330,9 +420,9 @@ public class addCompliance extends javax.swing.JDialog {
             JOptionPane.showMessageDialog(this, "Please enter actions taken.");
         } else if (document == null || document.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please enter a document link.");
-        } else  if (status == 0) {
+        } else if (status == 0) {
             JOptionPane.showMessageDialog(this, "Please select the status.");
-        }else {
+        } else {
             try {
                 // Format Date for created_at and updated_at
                 LocalDateTime now = LocalDateTime.now();
@@ -348,9 +438,11 @@ public class addCompliance extends javax.swing.JDialog {
                 // Insert into database
                 MySQL2.executeIUD("INSERT INTO `compliance_dashboard` (`date`,`audit_type`,`compliance_status_id`,`responsible_party`,`deadline`,`findings`,`actions_taken`,`document_link`,`created_at`,`updated_at`) "
                         + "VALUES ('" + formattedDate + "','" + auditType + "','" + status + "','" + responsible + "','" + formattedDeadline + "','" + findings + "','" + actionsTaken + "','" + document + "','" + createdAt + "','" + updatedAt + "')");
-                
+
                 clearCompliance();
-                
+                accounting.initCardData();
+                accounting.loadCompliance();
+
                 JOptionPane.showMessageDialog(this, "Compliance record added successfully!");
             } catch (Exception e) {
                 e.printStackTrace();
@@ -367,6 +459,29 @@ public class addCompliance extends javax.swing.JDialog {
         // clear compliance
         clearCompliance();
     }//GEN-LAST:event_jButton3ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        // Update Compliance
+        int status = jComboBox1.getSelectedIndex();
+
+        // Input Validation
+        if (status == 0) {
+            JOptionPane.showMessageDialog(this, "Please select the status.");
+        } else {
+            try {
+                // Update database
+                MySQL2.executeIUD("UPDATE `compliance_dashboard` SET `compliance_status_id`='" + status + "' WHERE `id`='" + complianceId + "'");
+
+                clearCompliance();
+                accounting.initCardData();
+                JOptionPane.showMessageDialog(this, "Compliance record updated successfully!");
+                accounting.loadCompliance();
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "An error occurred while updating the record.");
+            }
+        }
+    }//GEN-LAST:event_jButton2ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -396,18 +511,6 @@ public class addCompliance extends javax.swing.JDialog {
         //</editor-fold>
 
         /* Create and display the dialog */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                addCompliance dialog = new addCompliance(new javax.swing.JFrame(), true);
-                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-                    @Override
-                    public void windowClosing(java.awt.event.WindowEvent e) {
-                        System.exit(0);
-                    }
-                });
-                dialog.setVisible(true);
-            }
-        });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

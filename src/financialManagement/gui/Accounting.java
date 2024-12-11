@@ -183,7 +183,7 @@ public class Accounting extends javax.swing.JFrame {
             e.printStackTrace();
         }
     }
- 
+
     private void loadTransactionCategory() {
         try {
             ResultSet resultSet = MySQL2.executeSearch("SELECT * FROM `category`");
@@ -530,9 +530,9 @@ public class Accounting extends javax.swing.JFrame {
         for (Map.Entry<String, double[]> entry : monthlyData.entrySet()) {
             String month = entry.getKey();
             double[] values = entry.getValue();
-            System.out.println("Month: " + month + ", Values: " + Arrays.toString(values));
+            //System.out.println("Month: " + month + ", Values: " + Arrays.toString(values));
             if (values.length != 2) {
-                System.out.println("Invalid data for month: " + month + " with values: " + Arrays.toString(values));
+                //System.out.println("Invalid data for month: " + month + " with values: " + Arrays.toString(values));
             } else {
                 chart1.addData(new ModelChart(month, values));
             }
@@ -638,23 +638,36 @@ public class Accounting extends javax.swing.JFrame {
         //chart1.addData(new ModelChart("May", new double[]{350, 540, 300, 150}));
         //chart1.addData(new ModelChart("June", new double[]{190, 280, 81, 200}));
         //bar chart 2
-        chart2.addLegend("Total Audits", new Color(255, 51, 0));
-        //chart2.addLegend("Compliance Status", new Color(255, 165, 0));
-        chart2.addLegend("Pending Actions", new Color(255, 102, 51));
-        chart2.addData(new ModelChart("January", new double[]{450, 720, 60, 130}));
-        chart2.addData(new ModelChart("February", new double[]{600, 750, 90, 150}));
-        chart2.addData(new ModelChart("March", new double[]{200, 350, 460, 900}));
-        chart2.addData(new ModelChart("April", new double[]{480, 150, 750, 700}));
-        chart2.addData(new ModelChart("May", new double[]{350, 540, 300, 150}));
-        chart2.addData(new ModelChart("June", new double[]{190, 280, 81, 200}));
+        //chart2.addLegend("Total Audits", new Color(255, 51, 0));
+        //chart2.addLegend("Pending Actions", new Color(255, 102, 51));
+        //chart2.addData(new ModelChart("January", new double[]{450, 720, 60, 130}));
+        //chart2.addData(new ModelChart("February", new double[]{600, 750, 90, 150}));
+        //chart2.addData(new ModelChart("March", new double[]{200, 350, 460, 900}));
+        //chart2.addData(new ModelChart("April", new double[]{480, 150, 750, 700}));
+        //chart2.addData(new ModelChart("May", new double[]{350, 540, 300, 150}));
+        //chart2.addData(new ModelChart("June", new double[]{190, 280, 81, 200}));
     }
 
-    private void loadPieCharts() {
-        //pie chart 1 
-        polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(255, 51, 0), "Total Audits", 60));
-        // polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(255, 165, 0), "Compliance Status", 30));
-        polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(255, 102, 51), "Pending Actions", 40));
-    }
+private void loadPieCharts() {
+    // Get the total audits and pending actions
+    Integer totalAudits = calculateTotalAudits();
+    Integer pendingActions = calculatePendingActions();
+    
+    // Calculate resolved actions
+    Integer resolvedActions = totalAudits - pendingActions;
+    
+    // Calculate percentages for each segment
+    double pendingPercentage = (double) pendingActions / totalAudits * 100;
+    double resolvedPercentage = (double) resolvedActions / totalAudits * 100;
+
+    // Now, update the pie chart with these calculated values
+    // Pie chart 1: Total Audits, Pending Actions, and Resolved Actions
+   // polarAreaChart1.clearData(); // Clear previous data
+    
+    polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(255, 51, 0), "Total Audits (" + totalAudits + ")", totalAudits));
+    polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(246, 33, 33), "Pending Actions (" + pendingActions + ", " + String.format("%.2f", pendingPercentage) + "%)", pendingActions));
+    polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(220, 48, 48), "Resolved Actions (" + resolvedActions + ", " + String.format("%.2f", resolvedPercentage) + "%)", resolvedActions));
+}
 
     private Integer calculateTotalAudits() {
         Integer rowCount = null;
@@ -667,6 +680,24 @@ public class Accounting extends javax.swing.JFrame {
             e.printStackTrace();
         }
         return rowCount;
+    }
+
+    private Integer calculatePendingActions() {
+        Integer auditCount = null;
+        try {
+            ResultSet result = MySQL2.executeSearch("SELECT COUNT(*) AS audit_count\n"
+                    + "FROM `audit_logs`\n"
+                    + "WHERE `date` > (\n"
+                    + "    SELECT MAX(`created_at`) \n"
+                    + "    FROM `compliance_dashboard`\n"
+                    + ")");
+            if (result.next()) {
+                auditCount = result.getInt("audit_count");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return auditCount;
     }
 
     public String getCompliantStatus() {
@@ -701,6 +732,7 @@ public class Accounting extends javax.swing.JFrame {
 
             while (resultSet.next()) {
                 Vector<String> vector = new Vector<>();
+                vector.add(resultSet.getString("id"));
                 vector.add(resultSet.getString("date"));
                 vector.add(resultSet.getString("audit_type"));
                 vector.add(resultSet.getString("status"));
@@ -709,6 +741,78 @@ public class Accounting extends javax.swing.JFrame {
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void updateComplianceChart() {
+        // Map to store monthly data (Month as String -> Total Audits, Pending Actions)
+        Map<String, double[]> monthlyData = new HashMap<>();
+
+        // Fetch the data from the database
+        try {
+            // Query to get total audits by month (grouped by month)
+            String queryTotalAudits = "SELECT MONTH(date) AS month, YEAR(date) AS year, COUNT(*) AS audit_count "
+                    + "FROM audit_logs "
+                    + "GROUP BY YEAR(date), MONTH(date)";
+            ResultSet resultTotalAudits = MySQL2.executeSearch(queryTotalAudits);
+
+            // Query to get pending actions by month (based on the compliance_dashboard created_at column)
+            String queryPendingActions = "SELECT MONTH(al.date) AS month, YEAR(al.date) AS year, COUNT(*) AS pending_actions "
+                    + "FROM audit_logs al "
+                    + "WHERE al.date > (SELECT MAX(cd.created_at) FROM compliance_dashboard cd) "
+                    + "GROUP BY YEAR(al.date), MONTH(al.date)";
+            ResultSet resultPendingActions = MySQL2.executeSearch(queryPendingActions);
+
+            // Store the results in a map
+            while (resultTotalAudits.next()) {
+                String monthYear = resultTotalAudits.getInt("year") + "-" + resultTotalAudits.getInt("month");
+                double auditCount = resultTotalAudits.getDouble("audit_count");
+                monthlyData.put(monthYear, new double[]{auditCount, 0}); // Initialize pending actions as 0 for now
+            }
+
+            // Update the pending actions based on the second query
+            while (resultPendingActions.next()) {
+                String monthYear = resultPendingActions.getInt("year") + "-" + resultPendingActions.getInt("month");
+                double pendingActions = resultPendingActions.getDouble("pending_actions");
+
+                if (monthlyData.containsKey(monthYear)) {
+                    monthlyData.get(monthYear)[1] = pendingActions; // Update pending actions for the month
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Add legends to the chart
+        chart2.addLegend("Total Audits", new Color(255, 51, 0));
+        chart2.addLegend("Pending Actions", new Color(255, 102, 51));
+
+        // Month names array to convert month number to month name
+        String[] monthNames = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+
+        // Add data to the chart based on the months in the map
+        for (Map.Entry<String, double[]> entry : monthlyData.entrySet()) {
+            String monthYear = entry.getKey();
+            double[] values = entry.getValue();
+
+            // Extract the month number and year from the key (e.g., "2024-01" -> "01" and "2024")
+            String[] yearMonth = monthYear.split("-");
+            int monthNumber = Integer.parseInt(yearMonth[1]);
+            String year = yearMonth[0];
+
+            // Get the month name from the monthNumbers array
+            String monthName = monthNames[monthNumber - 1];
+
+            // Combine the month and year (e.g., "January 2024")
+            String monthYearLabel = monthName + " " + year;
+
+            // Assuming values[0] is Total Audits, and values[1] is Pending Actions
+            chart2.addData(new ModelChart(monthYearLabel, new double[]{
+                values[0], // Total Audits
+                values[1], // Pending Actions
+                values[0] - values[1], // Resolved (Calculated as Total Audits - Pending Actions)
+                values[1] // In Progress (Pending Actions)
+            }));
         }
     }
 
@@ -729,13 +833,14 @@ public class Accounting extends javax.swing.JFrame {
         loadIncomeStatements();
         loadAuditTrail();
         loadCompliance();
+        updateComplianceChart();
     }
 
     private void initData() {
         initCardData();
     }
 
-    private void initCardData() {
+    public void initCardData() {
         // Total Audits Card
         Icon icon1 = IconFontSwing.buildIcon(GoogleMaterialDesignIcons.FACT_CHECK, 60, new Color(255, 255, 255, 100), new Color(255, 255, 255, 15));
         card1.setData(new ModelCard("Total Audits", calculateTotalAudits(), 20, icon1));
@@ -746,7 +851,7 @@ public class Accounting extends javax.swing.JFrame {
 
         //
         Icon icon3 = IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ALARM, 60, new Color(255, 255, 255, 100), new Color(255, 255, 255, 15));
-        card3.setData(new ModelCard("Pending Actions", 13, 80, icon3));
+        card3.setData(new ModelCard("Pending Actions", calculatePendingActions(), 80, icon3));
     }
 
     @SuppressWarnings("unchecked")
@@ -1143,7 +1248,7 @@ public class Accounting extends javax.swing.JFrame {
                 .addComponent(jButton4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jButton2)
-                .addContainerGap(72, Short.MAX_VALUE))
+                .addContainerGap(86, Short.MAX_VALUE))
         );
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
@@ -2022,11 +2127,11 @@ public class Accounting extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Date", "Audit Type", "Status"
+                "ID", "Date", "Audit Type", "Status"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false
+                false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -2034,6 +2139,11 @@ public class Accounting extends javax.swing.JFrame {
             }
         });
         jTable5.getTableHeader().setReorderingAllowed(false);
+        jTable5.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTable5MouseClicked(evt);
+            }
+        });
         jScrollPane7.setViewportView(jTable5);
 
         jPanel28.add(jScrollPane7, java.awt.BorderLayout.CENTER);
@@ -2552,7 +2662,7 @@ public class Accounting extends javax.swing.JFrame {
 
         jTabbedPane2.addTab("Reporting Tools", jPanel22);
 
-        jPanel15.add(jTabbedPane2, java.awt.BorderLayout.CENTER);
+        jPanel15.add(jTabbedPane2, java.awt.BorderLayout.PAGE_START);
 
         jTabbedPane1.addTab("Compliance and Auditing", jPanel15);
 
@@ -2620,16 +2730,17 @@ public class Accounting extends javax.swing.JFrame {
                     updateBudgetTotal(categoryId, Double.parseDouble(amount));
                 }
 
-                LocalDateTime specificDateTime = LocalDateTime.of(2024, 11, 27, 15, 30, 45);
+                LocalDateTime currentDateTime = LocalDateTime.now();
 
                 MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
-                        + "('" + specificDateTime + "', '1', 'Created Transaction for " + category + "','1')");
+                        + "('" + currentDateTime + "', '1', 'Created Transaction for " + category + "','1')");
 
                 loadEntries();
                 clearLedgerEntries();
                 generateReferenceNumber();
                 checkBudgetExceeding();
                 loadAuditTrail();
+                initCardData();
             }
 
         } catch (Exception e) {
@@ -2673,7 +2784,7 @@ public class Accounting extends javax.swing.JFrame {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                 String endDateStr = dateFormat.format(endDate);
                 String status = String.valueOf(jTable2.getValueAt(row, 6));
-                LocalDateTime specificDateTime = LocalDateTime.of(2024, 11, 27, 15, 30, 45);
+                LocalDateTime currentDateTime = LocalDateTime.now();
 
                 if (!"Active".equals(status)) {
                     JOptionPane.showMessageDialog(this, "Cannot Update Budget is Inactive", "Warning", JOptionPane.WARNING_MESSAGE);
@@ -2683,11 +2794,12 @@ public class Accounting extends javax.swing.JFrame {
                             + " `status` = 'Active',`end_date`='" + endDateStr + "' WHERE `id`='" + selectedRow + "'");
 
                     MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
-                            + "('" + specificDateTime + "', '3', 'Updated Budget for  " + category + "','1')");
+                            + "('" + currentDateTime + "', '3', 'Updated Budget for  " + category + "','1')");
 
                     loadAuditTrail();
                     loadBudgets("Select");
                     clearBudgetEntries();
+                    initCardData();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -2756,12 +2868,13 @@ public class Accounting extends javax.swing.JFrame {
                     JOptionPane.showMessageDialog(this, "Please enter a valid amount.");
                 }
 
-                LocalDateTime specificDateTime = LocalDateTime.of(2024, 11, 27, 15, 30, 45);
+                LocalDateTime currentDateTime = LocalDateTime.now();
 
                 MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
-                        + "('" + specificDateTime + "', '2', 'Created Transaction for " + category + "','2')");
+                        + "('" + currentDateTime + "', '2', 'Created Transaction for " + category + "','2')");
 
                 loadAuditTrail();
+                initCardData();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -2771,7 +2884,7 @@ public class Accounting extends javax.swing.JFrame {
     private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
         // Delete Budget
         int selectedRowCount = jTable2.getSelectedRowCount();
-        LocalDateTime specificDateTime = LocalDateTime.of(2024, 11, 27, 15, 30, 45);
+        LocalDateTime currentDateTime = LocalDateTime.now();
         String category = String.valueOf(jComboBox6.getSelectedItem());
 
         if (selectedRowCount == 0) {
@@ -2800,9 +2913,10 @@ public class Accounting extends javax.swing.JFrame {
                     JOptionPane.showMessageDialog(this, "Entry deleted successfully.", "Deleted", JOptionPane.INFORMATION_MESSAGE);
 
                     MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
-                            + "('" + specificDateTime + "', '4', 'Deleted Budget  " + category + "','1')");
+                            + "('" + currentDateTime + "', '4', 'Deleted Budget  " + category + "','1')");
 
                     loadAuditTrail();
+                    initCardData();
                 }
 
             } catch (Exception e) {
@@ -3025,16 +3139,17 @@ public class Accounting extends javax.swing.JFrame {
 
     private void jButton14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton14ActionPerformed
         // Generate Reports
-        LocalDateTime specificDateTime = LocalDateTime.of(2024, 11, 27, 15, 30, 45);
+        LocalDateTime currentDateTime = LocalDateTime.now();
 
         if (jPanel16.getComponentCount() > 0 && jPanel16.getComponent(0) instanceof incomeStatement) {
             System.out.println("Print Income Statements");
 
             try {
                 MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
-                        + "('" + specificDateTime + "', '5', 'Generated Income Statement Report','2')");
+                        + "('" + currentDateTime + "', '5', 'Generated Income Statement Report','2')");
 
                 loadAuditTrail();
+                initCardData();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -3045,9 +3160,10 @@ public class Accounting extends javax.swing.JFrame {
 
             try {
                 MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
-                        + "('" + specificDateTime + "', '5', 'Generated Balance Sheet Report','2')");
+                        + "('" + currentDateTime + "', '5', 'Generated Balance Sheet Report','2')");
 
                 loadAuditTrail();
+                initCardData();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -3058,9 +3174,10 @@ public class Accounting extends javax.swing.JFrame {
 
             try {
                 MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
-                        + "('" + specificDateTime + "', '5', 'Generated Cash Flow Report','2')");
+                        + "('" + currentDateTime + "', '5', 'Generated Cash Flow Report','2')");
 
                 loadAuditTrail();
+                initCardData();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -3071,9 +3188,10 @@ public class Accounting extends javax.swing.JFrame {
 
             try {
                 MySQL2.executeIUD("INSERT INTO `homeowners`.`audit_logs` (`date`, `action_type_id`, `details`, `user_id`) VALUES "
-                        + "('" + specificDateTime + "', '5', 'Generated Expense Report','2')");
+                        + "('" + currentDateTime + "', '5', 'Generated Expense Report','2')");
 
                 loadAuditTrail();
+                initCardData();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -3097,9 +3215,24 @@ public class Accounting extends javax.swing.JFrame {
 
     private void jButton30ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton30ActionPerformed
         // View Add Compliance UI
-        addCompliance addCompliance = new addCompliance(this, rootPaneCheckingEnabled);
+        int id = -1;
+
+        addCompliance addCompliance = new addCompliance(this, true, id);
         addCompliance.setVisible(true);
     }//GEN-LAST:event_jButton30ActionPerformed
+
+    private void jTable5MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable5MouseClicked
+        // Select Compliance
+        int row = jTable5.getSelectedRow();
+
+        // Assuming the ID is in the first column (index 0)
+        String id1 = String.valueOf(jTable5.getValueAt(row, 0));
+        int id = Integer.parseInt(id1);
+
+        // Open the addCompliance dialog and pass the ID
+        addCompliance addComplianceDialog = new addCompliance(this, true, id);
+        addComplianceDialog.setVisible(true);  // Make the dialog visible
+    }//GEN-LAST:event_jTable5MouseClicked
 
     /**
      * @param args the command line arguments
