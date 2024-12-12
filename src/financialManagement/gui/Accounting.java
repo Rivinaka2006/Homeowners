@@ -1,5 +1,6 @@
 package financialManagement.gui;
 
+import model.DocumentService;
 import chart.ModelPolarAreaChart;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.raven.chart.ModelChart;
@@ -16,12 +17,14 @@ import java.awt.event.MouseEvent;
 import java.sql.ResultSet;
 import javax.swing.JFileChooser;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +47,7 @@ import model.MySQL2;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.sql.Statement;
+import java.sql.Connection;
 
 /**
  *
@@ -648,26 +652,25 @@ public class Accounting extends javax.swing.JFrame {
         //chart2.addData(new ModelChart("June", new double[]{190, 280, 81, 200}));
     }
 
-private void loadPieCharts() {
-    // Get the total audits and pending actions
-    Integer totalAudits = calculateTotalAudits();
-    Integer pendingActions = calculatePendingActions();
-    
-    // Calculate resolved actions
-    Integer resolvedActions = totalAudits - pendingActions;
-    
-    // Calculate percentages for each segment
-    double pendingPercentage = (double) pendingActions / totalAudits * 100;
-    double resolvedPercentage = (double) resolvedActions / totalAudits * 100;
+    private void loadPieCharts() {
+        // Get the total audits and pending actions
+        Integer totalAudits = calculateTotalAudits();
+        Integer pendingActions = calculatePendingActions();
 
-    // Now, update the pie chart with these calculated values
-    // Pie chart 1: Total Audits, Pending Actions, and Resolved Actions
-   // polarAreaChart1.clearData(); // Clear previous data
-    
-    polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(255, 51, 0), "Total Audits (" + totalAudits + ")", totalAudits));
-    polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(246, 33, 33), "Pending Actions (" + pendingActions + ", " + String.format("%.2f", pendingPercentage) + "%)", pendingActions));
-    polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(220, 48, 48), "Resolved Actions (" + resolvedActions + ", " + String.format("%.2f", resolvedPercentage) + "%)", resolvedActions));
-}
+        // Calculate resolved actions
+        Integer resolvedActions = totalAudits - pendingActions;
+
+        // Calculate percentages for each segment
+        double pendingPercentage = (double) pendingActions / totalAudits * 100;
+        double resolvedPercentage = (double) resolvedActions / totalAudits * 100;
+
+        // Now, update the pie chart with these calculated values
+        // Pie chart 1: Total Audits, Pending Actions, and Resolved Actions
+        // polarAreaChart1.clearData(); // Clear previous data
+        polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(255, 51, 0), "Total Audits (" + totalAudits + ")", totalAudits));
+        polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(246, 33, 33), "Pending Actions (" + pendingActions + ", " + String.format("%.2f", pendingPercentage) + "%)", pendingActions));
+        polarAreaChart1.addItem(new ModelPolarAreaChart(new Color(220, 48, 48), "Resolved Actions (" + resolvedActions + ", " + String.format("%.2f", resolvedPercentage) + "%)", resolvedActions));
+    }
 
     private Integer calculateTotalAudits() {
         Integer rowCount = null;
@@ -816,6 +819,31 @@ private void loadPieCharts() {
         }
     }
 
+    private void loadDocuments() {
+        try {
+            String query = "SELECT  * FROM `homeowners`.document_management";
+            ResultSet resultSet = MySQL2.executeSearch(query);
+
+            // Clear existing rows
+            DefaultTableModel model = (DefaultTableModel) jTable6.getModel();
+            model.setRowCount(0);
+
+            // Add new rows
+            while (resultSet.next()) {
+                Object[] row = {
+                    resultSet.getInt("id"),
+                    resultSet.getString("name"),
+                    resultSet.getTimestamp("upload_date"),
+                    resultSet.getString("type"),
+                    resultSet.getString("file_path")
+                };
+                model.addRow(row);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public Accounting() {
         initComponents();
         responsive();
@@ -834,6 +862,7 @@ private void loadPieCharts() {
         loadAuditTrail();
         loadCompliance();
         updateComplianceChart();
+        loadDocuments();
     }
 
     private void initData() {
@@ -989,7 +1018,6 @@ private void loadPieCharts() {
         jLabel31 = new javax.swing.JLabel();
         jComboBox11 = new javax.swing.JComboBox<>();
         jButton21 = new javax.swing.JButton();
-        jButton23 = new javax.swing.JButton();
         jButton24 = new javax.swing.JButton();
         jPanel30 = new javax.swing.JPanel();
         jScrollPane8 = new javax.swing.JScrollPane();
@@ -1956,7 +1984,7 @@ private void loadPieCharts() {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jComboBox10, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jButton29, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(242, Short.MAX_VALUE))
+                .addContainerGap(241, Short.MAX_VALUE))
         );
         jPanel23Layout.setVerticalGroup(
             jPanel23Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2189,27 +2217,42 @@ private void loadPieCharts() {
         jButton18.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jButton18.setForeground(new java.awt.Color(255, 255, 255));
         jButton18.setText("Upload Document");
+        jButton18.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton18ActionPerformed(evt);
+            }
+        });
 
         jButton19.setBackground(new java.awt.Color(255, 102, 0));
         jButton19.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jButton19.setForeground(new java.awt.Color(255, 255, 255));
         jButton19.setText("Search");
+        jButton19.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton19ActionPerformed(evt);
+            }
+        });
 
         jLabel31.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jLabel31.setForeground(new java.awt.Color(0, 0, 0));
         jLabel31.setText("Filter");
 
         jComboBox11.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        jComboBox11.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBox11ActionPerformed(evt);
+            }
+        });
 
         jButton21.setBackground(new java.awt.Color(255, 102, 0));
         jButton21.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
         jButton21.setForeground(new java.awt.Color(255, 255, 255));
-        jButton21.setText("Edit");
-
-        jButton23.setBackground(new java.awt.Color(255, 102, 0));
-        jButton23.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
-        jButton23.setForeground(new java.awt.Color(255, 255, 255));
-        jButton23.setText("Delete");
+        jButton21.setText("Delete");
+        jButton21.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton21ActionPerformed(evt);
+            }
+        });
 
         jButton24.setBackground(new java.awt.Color(255, 102, 0));
         jButton24.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
@@ -2243,10 +2286,8 @@ private void loadPieCharts() {
                         .addGap(112, 112, 112)
                         .addComponent(jButton24, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(35, 35, 35)
-                        .addComponent(jButton21, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(35, 35, 35)
-                        .addComponent(jButton23, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(171, Short.MAX_VALUE))
+                        .addComponent(jButton21, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(325, Short.MAX_VALUE))
         );
         jPanel29Layout.setVerticalGroup(
             jPanel29Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2262,7 +2303,6 @@ private void loadPieCharts() {
                     .addComponent(jLabel31)
                     .addComponent(jComboBox11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButton21)
-                    .addComponent(jButton23)
                     .addComponent(jButton24))
                 .addContainerGap())
         );
@@ -2275,11 +2315,11 @@ private void loadPieCharts() {
 
             },
             new String [] {
-                "Name", "Upload Date", "Type", "Actions"
+                "ID", "Name", "Upload Date", "Type", "Path"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, true, true
+                false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -2354,7 +2394,7 @@ private void loadPieCharts() {
                 .addComponent(jLabel43)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jDateChooser11, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(43, Short.MAX_VALUE))
+                .addContainerGap(39, Short.MAX_VALUE))
         );
         jPanel34Layout.setVerticalGroup(
             jPanel34Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2566,7 +2606,7 @@ private void loadPieCharts() {
                 .addGroup(jPanel32Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jLabel35, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
                     .addComponent(jButton22, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 31, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 30, Short.MAX_VALUE)
                 .addGroup(jPanel32Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(jPanel32Layout.createSequentialGroup()
                         .addComponent(jLabel39)
@@ -2577,7 +2617,7 @@ private void loadPieCharts() {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jDateChooser8, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jButton25, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 37, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 35, Short.MAX_VALUE)
                 .addGroup(jPanel32Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel38)
                     .addComponent(jLabel37))
@@ -2994,8 +3034,38 @@ private void loadPieCharts() {
 
     private void jButton24ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton24ActionPerformed
         // Preview Document
-        PreviewDocument previewDocument = new PreviewDocument(this, rootPaneCheckingEnabled);
-        previewDocument.setVisible(true);
+        int row = jTable6.getSelectedRow();
+
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a document from the table.", "Error", JOptionPane.WARNING_MESSAGE);
+            return;  // Exit method if no row is selected
+        }
+
+        // Get the file path from the table cell (Column 4)
+        String filePath = String.valueOf(jTable6.getValueAt(row, 4));
+
+        // Validate the file path
+        if (filePath == null || filePath.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "File path is empty or invalid.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Create a File object using the file path
+        File file = new File(filePath);
+
+        // Check if the file exists and is a valid file
+        if (file.exists() && file.isFile()) {
+            try {
+                // Use Desktop to open the file with its default application
+                Desktop.getDesktop().open(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error opening the file. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            // Show error if the file does not exist or isn't a valid file
+            JOptionPane.showMessageDialog(this, "File not found or is not a valid file.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_jButton24ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
@@ -3204,6 +3274,7 @@ private void loadPieCharts() {
     }//GEN-LAST:event_jButton16ActionPerformed
 
     private void jButton17ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton17ActionPerformed
+
         // Search User
         loadAuditTrail();
     }//GEN-LAST:event_jButton17ActionPerformed
@@ -3233,6 +3304,102 @@ private void loadPieCharts() {
         addCompliance addComplianceDialog = new addCompliance(this, true, id);
         addComplianceDialog.setVisible(true);  // Make the dialog visible
     }//GEN-LAST:event_jTable5MouseClicked
+
+    private void jButton18ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton18ActionPerformed
+        // Upload Document
+        JFileChooser fileChooser = new JFileChooser();
+        int returnValue = fileChooser.showOpenDialog(null);
+
+        // If the user selects a file
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();  // Get the selected file
+
+            // Now, allow the user to select a directory for uploading the file
+            JFileChooser directoryChooser = new JFileChooser();
+            directoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY); // Set to directories only
+            returnValue = directoryChooser.showOpenDialog(null);
+
+            // If the user selects a directory
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                File selectedDirectory = directoryChooser.getSelectedFile();  // Get the selected directory
+
+                // Get the upload directory from the selected folder
+                String uploadDirectory = selectedDirectory.getAbsolutePath();
+
+                // Ensure the upload directory ends with a separator
+                if (!uploadDirectory.endsWith(File.separator)) {
+                    uploadDirectory += File.separator;
+                }
+
+                // Ensure the upload directory exists
+                File uploadDir = new File(uploadDirectory);
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs();  // Create directory if it doesn't exist
+                }
+
+                // Continue with the file upload process...
+                try (InputStream fileContent = new FileInputStream(selectedFile)) {
+                    String fileName = selectedFile.getName();
+                    String fileType = Files.probeContentType(selectedFile.toPath());
+                    DocumentService documentService = new DocumentService();
+                    String result = documentService.uploadDocument(fileName, fileType, fileContent, uploadDirectory);
+                    JOptionPane.showMessageDialog(this, result);
+                    loadDocuments();  // Refresh the table or UI
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Failed to upload document.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+
+    }//GEN-LAST:event_jButton18ActionPerformed
+
+    private void jButton19ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton19ActionPerformed
+        //Search Document
+        String query = jTextField4.getText();
+    }//GEN-LAST:event_jButton19ActionPerformed
+
+    private void jComboBox11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox11ActionPerformed
+        // Select file
+        String filter = (String) jComboBox11.getSelectedItem();
+    }//GEN-LAST:event_jComboBox11ActionPerformed
+
+    private void jButton21ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton21ActionPerformed
+        // Delete Document
+        int row = jTable6.getSelectedRow();
+
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a document to delete.", "Error", JOptionPane.WARNING_MESSAGE);
+            return;  // Exit method if no row is selected
+        }
+
+        // Get the document ID from the table (Column 0)
+        String documentId = String.valueOf(jTable6.getValueAt(row, 0));
+
+        // Validate document ID
+        if (documentId == null || documentId.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Invalid document ID.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            // Execute the delete query
+            int rowsAffected = MySQL2.executeIUD("DELETE FROM `document_management` WHERE `id`='" + documentId + "'");
+
+            // Check if the document was actually deleted
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(this, "Document Deleted Successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
+                loadDocuments();  // Reload the documents to reflect the changes
+            } else {
+                // If no rows were affected, it means the document ID did not exist in the database
+                JOptionPane.showMessageDialog(this, "Document not found or could not be deleted.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception e) {
+            // Catch and print any exceptions that occur during the delete operation
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "An error occurred while deleting the document.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_jButton21ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -3277,7 +3444,6 @@ private void loadPieCharts() {
     private javax.swing.JButton jButton20;
     private javax.swing.JButton jButton21;
     private javax.swing.JButton jButton22;
-    private javax.swing.JButton jButton23;
     private javax.swing.JButton jButton24;
     private javax.swing.JButton jButton25;
     private javax.swing.JButton jButton26;

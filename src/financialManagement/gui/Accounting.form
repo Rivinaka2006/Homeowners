@@ -1762,7 +1762,7 @@
                                           </Group>
                                           <Component id="jButton29" max="32767" attributes="0"/>
                                       </Group>
-                                      <EmptySpace pref="242" max="32767" attributes="0"/>
+                                      <EmptySpace pref="241" max="32767" attributes="0"/>
                                   </Group>
                               </Group>
                             </DimensionLayout>
@@ -2325,11 +2325,9 @@
                                               <Component id="jButton24" min="-2" pref="121" max="-2" attributes="0"/>
                                               <EmptySpace min="-2" pref="35" max="-2" attributes="0"/>
                                               <Component id="jButton21" min="-2" pref="121" max="-2" attributes="0"/>
-                                              <EmptySpace min="-2" pref="35" max="-2" attributes="0"/>
-                                              <Component id="jButton23" min="-2" pref="121" max="-2" attributes="0"/>
                                           </Group>
                                       </Group>
-                                      <EmptySpace pref="171" max="32767" attributes="0"/>
+                                      <EmptySpace pref="325" max="32767" attributes="0"/>
                                   </Group>
                               </Group>
                             </DimensionLayout>
@@ -2347,7 +2345,6 @@
                                           <Component id="jLabel31" alignment="3" min="-2" max="-2" attributes="0"/>
                                           <Component id="jComboBox11" alignment="3" min="-2" max="-2" attributes="0"/>
                                           <Component id="jButton21" alignment="3" min="-2" max="-2" attributes="0"/>
-                                          <Component id="jButton23" alignment="3" min="-2" max="-2" attributes="0"/>
                                           <Component id="jButton24" alignment="3" min="-2" max="-2" attributes="0"/>
                                       </Group>
                                       <EmptySpace max="-2" attributes="0"/>
@@ -2380,6 +2377,9 @@
                                 </Property>
                                 <Property name="text" type="java.lang.String" value="Upload Document"/>
                               </Properties>
+                              <Events>
+                                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton18ActionPerformed"/>
+                              </Events>
                             </Component>
                             <Component class="javax.swing.JButton" name="jButton19">
                               <Properties>
@@ -2394,6 +2394,9 @@
                                 </Property>
                                 <Property name="text" type="java.lang.String" value="Search"/>
                               </Properties>
+                              <Events>
+                                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton19ActionPerformed"/>
+                              </Events>
                             </Component>
                             <Component class="javax.swing.JTextField" name="jTextField4">
                             </Component>
@@ -2419,6 +2422,9 @@
                                   </StringArray>
                                 </Property>
                               </Properties>
+                              <Events>
+                                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jComboBox11ActionPerformed"/>
+                              </Events>
                               <AuxValues>
                                 <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
                               </AuxValues>
@@ -2434,22 +2440,11 @@
                                 <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
                                   <Color blue="ff" green="ff" red="ff" type="rgb"/>
                                 </Property>
-                                <Property name="text" type="java.lang.String" value="Edit"/>
-                              </Properties>
-                            </Component>
-                            <Component class="javax.swing.JButton" name="jButton23">
-                              <Properties>
-                                <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                                  <Color blue="0" green="66" red="ff" type="rgb"/>
-                                </Property>
-                                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                                  <Font name="Dialog" size="12" style="1"/>
-                                </Property>
-                                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                                  <Color blue="ff" green="ff" red="ff" type="rgb"/>
-                                </Property>
                                 <Property name="text" type="java.lang.String" value="Delete"/>
                               </Properties>
+                              <Events>
+                                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton21ActionPerformed"/>
+                              </Events>
                             </Component>
                             <Component class="javax.swing.JButton" name="jButton24">
                               <Properties>
@@ -2494,15 +2489,21 @@
                                 <Component class="javax.swing.JTable" name="jTable6">
                                   <Properties>
                                     <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                                      <Table columnCount="4" rowCount="0">
+                                      <Table columnCount="5" rowCount="0">
+                                        <Column editable="false" title="ID" type="java.lang.Object"/>
                                         <Column editable="false" title="Name" type="java.lang.Object"/>
                                         <Column editable="false" title="Upload Date" type="java.lang.Object"/>
-                                        <Column editable="true" title="Type" type="java.lang.Object"/>
-                                        <Column editable="true" title="Actions" type="java.lang.Object"/>
+                                        <Column editable="false" title="Type" type="java.lang.Object"/>
+                                        <Column editable="false" title="Path" type="java.lang.Object"/>
                                       </Table>
                                     </Property>
                                     <Property name="columnModel" type="javax.swing.table.TableColumnModel" editor="org.netbeans.modules.form.editors2.TableColumnModelEditor">
                                       <TableColumnModel selectionModel="0">
+                                        <Column maxWidth="-1" minWidth="-1" prefWidth="-1" resizable="true">
+                                          <Title/>
+                                          <Editor/>
+                                          <Renderer/>
+                                        </Column>
                                         <Column maxWidth="-1" minWidth="-1" prefWidth="-1" resizable="true">
                                           <Title/>
                                           <Editor/>
@@ -2595,7 +2596,7 @@
                                       <Component id="jLabel43" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="jDateChooser11" min="-2" pref="125" max="-2" attributes="0"/>
-                                      <EmptySpace pref="43" max="32767" attributes="0"/>
+                                      <EmptySpace pref="39" max="32767" attributes="0"/>
                                   </Group>
                               </Group>
                             </DimensionLayout>
@@ -3001,7 +3002,7 @@
                                           <Component id="jLabel35" pref="146" max="32767" attributes="0"/>
                                           <Component id="jButton22" max="32767" attributes="0"/>
                                       </Group>
-                                      <EmptySpace pref="31" max="32767" attributes="0"/>
+                                      <EmptySpace pref="30" max="32767" attributes="0"/>
                                       <Group type="103" groupAlignment="0" max="-2" attributes="0">
                                           <Group type="102" attributes="0">
                                               <Component id="jLabel39" min="-2" max="-2" attributes="0"/>
@@ -3014,7 +3015,7 @@
                                           </Group>
                                           <Component id="jButton25" max="32767" attributes="0"/>
                                       </Group>
-                                      <EmptySpace pref="37" max="32767" attributes="0"/>
+                                      <EmptySpace pref="35" max="32767" attributes="0"/>
                                       <Group type="103" groupAlignment="0" attributes="0">
                                           <Component id="jLabel38" min="-2" max="-2" attributes="0"/>
                                           <Component id="jLabel37" min="-2" max="-2" attributes="0"/>
