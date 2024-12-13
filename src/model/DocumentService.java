@@ -1,13 +1,11 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -15,18 +13,30 @@ import java.util.Date;
 public class DocumentService {
 
     public String uploadDocument(String name, String type, InputStream fileContent, String uploadDirectory) {
-        // Construct the full file path dynamically based on the provided directory
-        String filePath = uploadDirectory + "/" + name;  // Upload directory + file name
+        // Ensure the upload directory is structured correctly (separate by "/")
+        uploadDirectory = uploadDirectory.replace("\\", "/");  // Ensure all slashes are forward slashes
 
+        // Split the uploadDirectory into subdirectories and ensure each level exists
+        Path path = Paths.get(uploadDirectory);
+        if (!Files.exists(path)) {
+            try {
+                Files.createDirectories(path); // Ensure that all subdirectories are created
+            } catch (Exception e) {
+                e.printStackTrace();
+                return "Failed to create directories.";
+            }
+        }
+
+        // Construct the full file path by adding the file name
+        String filePath = uploadDirectory + File.separator + name;  // Use File.separator for system compatibility
+
+        // Get the current date
         Date date = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         String formattedDate = sdf.format(date);
 
         try {
-            // Ensure the directory exists
-            Files.createDirectories(Paths.get(uploadDirectory)); // Creates the directory if it doesn't exist
-
-            // Save file to the specified path
+            // Save the file to the specified path
             try (OutputStream fileOutputStream = new FileOutputStream(filePath)) {
                 byte[] buffer = new byte[1024];
                 int bytesRead;
