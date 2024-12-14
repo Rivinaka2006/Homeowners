@@ -10,6 +10,8 @@ import java.util.Vector;
 import javax.swing.table.DefaultTableModel;
 import model.MySQL2;
 import java.sql.ResultSet;
+import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableCellRenderer;
 
 /**
  *
@@ -20,10 +22,17 @@ public class expense extends javax.swing.JPanel {
     private Date startDate;
     private Date endDate;
 
+    public void tableCellRender() {
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+        renderer.setHorizontalAlignment(SwingConstants.CENTER);
+        jTable3.setDefaultRenderer(Object.class, renderer);
+    }
+
     public expense(Date startDate, Date endDate) {
         this.startDate = startDate;
         this.endDate = endDate;
         initComponents();
+        tableCellRender();
         loadExpenses();
     }
 

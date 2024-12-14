@@ -9,6 +9,8 @@ import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
+import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -20,11 +22,18 @@ public class incomeStatement extends javax.swing.JPanel {
     private Date startDate;
     private Date endDate;
 
+    public void tableCellRender() {
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+        renderer.setHorizontalAlignment(SwingConstants.CENTER);
+        jTable3.setDefaultRenderer(Object.class, renderer);
+    }
+
     public incomeStatement(Date startDate, Date endDate) {
         this.startDate = startDate;
         this.endDate = endDate;
         initComponents();
         loadIncomeStatements();
+        tableCellRender();
     }
 
     public void loadIncomeStatements() {

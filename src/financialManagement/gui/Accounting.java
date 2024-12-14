@@ -47,7 +47,8 @@ import model.MySQL2;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.sql.Statement;
-import java.sql.Connection;
+import javax.swing.SwingConstants;
+import javax.swing.table.TableColumn;
 
 /**
  *
@@ -60,6 +61,27 @@ public class Accounting extends javax.swing.JFrame {
     private static HashMap<String, String> paymentMethodMap = new HashMap<>();
     private static HashMap<String, Integer> budgetCategoryMap = new HashMap<>();
     private static HashMap<String, String> auditActionMap = new HashMap<>();
+
+    public void tableCellRender() {
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+        renderer.setHorizontalAlignment(SwingConstants.CENTER);
+        jTable2.setDefaultRenderer(Object.class, renderer);
+        jTable3.setDefaultRenderer(Object.class, renderer);
+        jTable5.setDefaultRenderer(Object.class, renderer);
+        jTable8.setDefaultRenderer(Object.class, renderer);
+    }
+
+    public static void hideColumn(JTable table, int columnIndex) {
+        TableColumn column = table.getColumnModel().getColumn(columnIndex);
+        column.setPreferredWidth(0); // Set width to 0 (hidden)
+        column.setMaxWidth(0); // Ensure it stays hidden
+        column.setMinWidth(0); // Ensure it stays hidden
+
+        // Optionally hide the column header as well
+        table.getTableHeader().getColumnModel().getColumn(columnIndex).setMaxWidth(0);
+        table.getTableHeader().getColumnModel().getColumn(columnIndex).setMinWidth(0);
+        table.getTableHeader().getColumnModel().getColumn(columnIndex).setPreferredWidth(0);
+    }
 
     public void scheduleBudgetDeactivation() {
 
@@ -310,6 +332,8 @@ public class Accounting extends javax.swing.JFrame {
             ResultSet resultSet = MySQL2.executeSearch(query);
 
             DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
+            hideColumn(jTable2, 0);
+
             model.setRowCount(0);
 
             while (resultSet.next()) {
@@ -731,6 +755,8 @@ public class Accounting extends javax.swing.JFrame {
                     + "`compliance_dashboard`.compliance_status_id = `compliance_status`.id");
 
             DefaultTableModel model = (DefaultTableModel) jTable5.getModel();
+             hideColumn(jTable5, 0);
+            
             model.setRowCount(0);
 
             while (resultSet.next()) {
@@ -856,8 +882,9 @@ public class Accounting extends javax.swing.JFrame {
             // Execute the query
             ResultSet resultSet = MySQL2.executeSearch(query);
 
-            // Clear existing rows in the table
             DefaultTableModel model = (DefaultTableModel) jTable6.getModel();
+            hideColumn(jTable6, 0);
+            // Clear existing rows in the table
             model.setRowCount(0);
 
             // Create a Vector to store the result set rows
@@ -873,9 +900,32 @@ public class Accounting extends javax.swing.JFrame {
                 row.add(resultSet.getString("file_path"));
                 rows.add(row);
             }
-            
+
             for (Vector<Object> row : rows) {
                 model.addRow(row);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadNotifications() {
+        try {
+            ResultSet result = MySQL2.executeSearch("SELECT  * FROM `alerts_notifications`");
+
+            DefaultTableModel dtm = (DefaultTableModel) jTable8.getModel();
+            hideColumn(jTable8, 0);
+
+            dtm.setRowCount(0);
+
+            while (result.next()) {
+                Vector vector = new Vector();
+                vector.add(result.getString("id"));
+                vector.add(result.getString("type"));
+                vector.add(result.getString("message"));
+                vector.add(result.getString("date"));
+                dtm.addRow(vector);
             }
 
         } catch (Exception e) {
@@ -886,6 +936,7 @@ public class Accounting extends javax.swing.JFrame {
     public Accounting() {
         initComponents();
         responsive();
+        tableCellRender();
         initData();
         loadEntries();
         loadTransactionType();
@@ -902,6 +953,7 @@ public class Accounting extends javax.swing.JFrame {
         loadCompliance();
         updateComplianceChart();
         loadDocuments();
+        loadNotifications();
     }
 
     private void initData() {
@@ -1075,6 +1127,8 @@ public class Accounting extends javax.swing.JFrame {
         jDateChooser10 = new com.toedter.calendar.JDateChooser();
         jLabel43 = new javax.swing.JLabel();
         jDateChooser11 = new com.toedter.calendar.JDateChooser();
+        jButton23 = new javax.swing.JButton();
+        jButton31 = new javax.swing.JButton();
         jPanel35 = new javax.swing.JPanel();
         jScrollPane10 = new javax.swing.JScrollPane();
         jTable8 = new javax.swing.JTable();
@@ -1131,7 +1185,7 @@ public class Accounting extends javax.swing.JFrame {
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1303, Short.MAX_VALUE)
+            .addGap(0, 1438, Short.MAX_VALUE)
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1347,7 +1401,7 @@ public class Accounting extends javax.swing.JFrame {
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel9Layout.createSequentialGroup()
                 .addGap(0, 0, 0)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1000, Short.MAX_VALUE))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1135, Short.MAX_VALUE))
         );
         jPanel9Layout.setVerticalGroup(
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1616,7 +1670,7 @@ public class Accounting extends javax.swing.JFrame {
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(chart1, javax.swing.GroupLayout.DEFAULT_SIZE, 975, Short.MAX_VALUE)
+                    .addComponent(chart1, javax.swing.GroupLayout.DEFAULT_SIZE, 1110, Short.MAX_VALUE)
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel13)
@@ -1891,7 +1945,7 @@ public class Accounting extends javax.swing.JFrame {
                         .addComponent(jButton12, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(jButton13, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(269, Short.MAX_VALUE))
+                .addContainerGap(404, Short.MAX_VALUE))
         );
         jPanel18Layout.setVerticalGroup(
             jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2027,7 +2081,7 @@ public class Accounting extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jComboBox10, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jButton29, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(262, Short.MAX_VALUE))
+                .addContainerGap(397, Short.MAX_VALUE))
         );
         jPanel23Layout.setVerticalGroup(
             jPanel23Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2159,7 +2213,7 @@ public class Accounting extends javax.swing.JFrame {
             .addGroup(jPanel26Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel26Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(chart2, javax.swing.GroupLayout.DEFAULT_SIZE, 948, Short.MAX_VALUE)
+                    .addComponent(chart2, javax.swing.GroupLayout.DEFAULT_SIZE, 1083, Short.MAX_VALUE)
                     .addGroup(jPanel26Layout.createSequentialGroup()
                         .addGap(10, 10, 10)
                         .addComponent(jLabel29)
@@ -2400,7 +2454,7 @@ public class Accounting extends javax.swing.JFrame {
         jPanel20.setLayout(jPanel20Layout);
         jPanel20Layout.setHorizontalGroup(
             jPanel20Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel29, javax.swing.GroupLayout.PREFERRED_SIZE, 1298, Short.MAX_VALUE)
+            .addComponent(jPanel29, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(jPanel30, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel20Layout.setVerticalGroup(
@@ -2438,6 +2492,21 @@ public class Accounting extends javax.swing.JFrame {
         jLabel43.setForeground(new java.awt.Color(0, 0, 0));
         jLabel43.setText("End Date");
 
+        jButton23.setBackground(new java.awt.Color(255, 102, 0));
+        jButton23.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
+        jButton23.setForeground(new java.awt.Color(255, 255, 255));
+        jButton23.setText("View");
+
+        jButton31.setBackground(new java.awt.Color(255, 0, 0));
+        jButton31.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
+        jButton31.setForeground(new java.awt.Color(255, 255, 255));
+        jButton31.setText("Dismiss");
+        jButton31.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton31ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel34Layout = new javax.swing.GroupLayout(jPanel34);
         jPanel34.setLayout(jPanel34Layout);
         jPanel34Layout.setHorizontalGroup(
@@ -2459,7 +2528,11 @@ public class Accounting extends javax.swing.JFrame {
                 .addComponent(jLabel43)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jDateChooser11, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(60, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(jButton23, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(8, 8, 8)
+                .addComponent(jButton31, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
         jPanel34Layout.setVerticalGroup(
             jPanel34Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2481,6 +2554,11 @@ public class Accounting extends javax.swing.JFrame {
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel34Layout.createSequentialGroup()
                         .addGap(21, 21, 21)
                         .addGroup(jPanel34Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel34Layout.createSequentialGroup()
+                                .addGroup(jPanel34Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(jButton23)
+                                    .addComponent(jButton31))
+                                .addGap(0, 0, Short.MAX_VALUE))
                             .addComponent(jDateChooser11, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jDateChooser10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addGap(24, 24, 24))
@@ -2493,7 +2571,7 @@ public class Accounting extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Type", "Message", "Date", "Action"
+                "ID", "Type", "Message", "Date"
             }
         ) {
             boolean[] canEdit = new boolean [] {
@@ -2671,7 +2749,7 @@ public class Accounting extends javax.swing.JFrame {
                 .addGroup(jPanel32Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jLabel35, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
                     .addComponent(jButton22, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 40, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 107, Short.MAX_VALUE)
                 .addGroup(jPanel32Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(jPanel32Layout.createSequentialGroup()
                         .addComponent(jLabel39)
@@ -2682,7 +2760,7 @@ public class Accounting extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jDateChooser8, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jButton25, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 45, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 112, Short.MAX_VALUE)
                 .addGroup(jPanel32Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel38)
                     .addComponent(jLabel37))
@@ -3409,7 +3487,7 @@ public class Accounting extends javax.swing.JFrame {
                     DocumentService documentService = new DocumentService();
                     String result = documentService.uploadDocument(fileName, fileType, fileContent, uploadDirectory);
                     JOptionPane.showMessageDialog(this, result);
-                    loadDocuments();  
+                    loadDocuments();
                 } catch (IOException e) {
                     e.printStackTrace();
                     JOptionPane.showMessageDialog(this, "Failed to upload document.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -3426,7 +3504,7 @@ public class Accounting extends javax.swing.JFrame {
 
     private void jComboBox11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox11ActionPerformed
         //filter document
-       loadDocuments();
+        loadDocuments();
     }//GEN-LAST:event_jComboBox11ActionPerformed
 
     private void jButton21ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton21ActionPerformed
@@ -3465,6 +3543,10 @@ public class Accounting extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "An error occurred while deleting the document.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_jButton21ActionPerformed
+
+    private void jButton31ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton31ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton31ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -3509,6 +3591,7 @@ public class Accounting extends javax.swing.JFrame {
     private javax.swing.JButton jButton20;
     private javax.swing.JButton jButton21;
     private javax.swing.JButton jButton22;
+    private javax.swing.JButton jButton23;
     private javax.swing.JButton jButton24;
     private javax.swing.JButton jButton25;
     private javax.swing.JButton jButton26;
@@ -3517,6 +3600,7 @@ public class Accounting extends javax.swing.JFrame {
     private javax.swing.JButton jButton29;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton30;
+    private javax.swing.JButton jButton31;
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
     private javax.swing.JButton jButton6;
