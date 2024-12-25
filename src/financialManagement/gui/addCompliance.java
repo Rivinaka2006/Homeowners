@@ -127,7 +127,7 @@ public class addCompliance extends javax.swing.JDialog {
                 }
             } else {
                 // If no data is found for the given ID
-                System.out.println("No data found for ID: " + complianceId);
+                //System.out.println("No data found for ID: " + complianceId);
             }
         } catch (SQLException e) {
             // Handle SQL exception
@@ -438,6 +438,8 @@ public class addCompliance extends javax.swing.JDialog {
                 // Insert into database
                 MySQL2.executeIUD("INSERT INTO `compliance_dashboard` (`date`,`audit_type`,`compliance_status_id`,`responsible_party`,`deadline`,`findings`,`actions_taken`,`document_link`,`created_at`,`updated_at`) "
                         + "VALUES ('" + formattedDate + "','" + auditType + "','" + status + "','" + responsible + "','" + formattedDeadline + "','" + findings + "','" + actionsTaken + "','" + document + "','" + createdAt + "','" + updatedAt + "')");
+
+                MySQL2.executeIUD("INSERT INTO `homeowners`.`alerts_notifications` (`type`, `message`, `date`) VALUES ('Compliance', 'New Update available', '" + formattedDate + "')");
 
                 clearCompliance();
                 accounting.initCardData();
