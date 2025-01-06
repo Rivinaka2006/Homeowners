@@ -9,7 +9,16 @@ import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.Vector;
+import javax.mail.Authenticator;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
@@ -415,15 +424,15 @@ public class GRN extends javax.swing.JFrame {
                             .addComponent(jLabel23, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jLabel24, javax.swing.GroupLayout.PREFERRED_SIZE, 209, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addGap(27, 27, 27))
-            .addGroup(jPanel1Layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addComponent(jScrollPane1)
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addGap(6, 6, 6)
@@ -458,8 +467,8 @@ public class GRN extends javax.swing.JFrame {
                                 .addGap(32, 32, 32)))
                         .addGap(1, 1, 1)
                         .addComponent(jLabel7)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
+                        .addGap(12, 12, 12))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(8, 8, 8)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -485,7 +494,7 @@ public class GRN extends javax.swing.JFrame {
                             .addComponent(jLabel12)
                             .addComponent(jLabel14)
                             .addComponent(jLabel13))
-                        .addGap(72, 72, 72)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -515,7 +524,7 @@ public class GRN extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -631,10 +640,14 @@ public class GRN extends javax.swing.JFrame {
         try {
 
             if (value == "0.00") {
-                JOptionPane.showMessageDialog(this, "Please Select the product for GRN", "Warning", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Please Select the product to GRN table", "Warning", JOptionPane.WARNING_MESSAGE);
             } else {
 
-                MySQL.executeIUD("INSERT INTO `grn` VALUES ('" + grnID + "','" + paidAmount + "','" + date + "'," + userID + ",'" + supplierID + "')");
+                MySQL.executeIUD("INSERT INTO `grn` VALUES ('" + grnID + "','" + paidAmount + "','" + date + "'," + supplierID + ",'" + userID + "')");
+
+                MySQL.executeIUD("INSERT INTO accounting_entries (date,description,amount,type_id,category_id,payment_methods_id,reference_no,notes,attached_receipt)"
+                        + "VALUES ('" + date + "','Purchase Goods','" + paidAmount + "','2','1','2','" + grnID + "','EXP','');");
+
                 reset();
                 genarateGRNId();
                 for (GRNItem grnItem : grnItemMap.values()) {
@@ -656,8 +669,8 @@ public class GRN extends javax.swing.JFrame {
                         genarateGRNId();
                     } else {
 
-                        MySQL.executeIUD("INSERT INTO `stock` (`product_id`,`qty`,`selling_price`,`mf_date`,`exp_date`)"
-                                + " VALUES('" + grnItem.getProductId() + "','" + grnItem.getQty() + "','" + grnItem.getSprice() + "','" + sdf.format(grnItem.getMfd()) + "','" + sdf.format(grnItem.getExp()) + "')");
+                        MySQL.executeIUD("INSERT INTO `stock` (`product_id`,`qty`,`selling_price`,`mf_date`,`exp_date`,`status_id`)"
+                                + " VALUES('" + grnItem.getProductId() + "','" + grnItem.getQty() + "','" + grnItem.getSprice() + "','" + sdf.format(grnItem.getMfd()) + "','" + sdf.format(grnItem.getExp()) + "','1')");
 
                         ResultSet rs2 = MySQL.executeSearch("SELECT * FROM `stock`"
                                 + " WHERE `selling_price` = '" + grnItem.getSprice() + "'"
@@ -674,8 +687,10 @@ public class GRN extends javax.swing.JFrame {
 
                     MySQL.executeIUD("INSERT INTO `grn_item`(`qty`,`buying_price`,`grn_id`,`stock_id`) "
                             + "VALUES('" + grnItem.getQty() + "','" + grnItem.getBprice() + "','" + grnID + "','" + sid + "')");
-                    reset();
-                    genarateGRNId();
+                    
+                    emailSend();
+                    reset();                 
+                    genarateGRNId();                    
                 }
             }
 
@@ -686,6 +701,53 @@ public class GRN extends javax.swing.JFrame {
 
     }//GEN-LAST:event_jButton5ActionPerformed
 
+    private void emailSend() {
+    
+        String supplierEmail = jLabel7.getText();
+        String grnID = jTextField1.getText();
+        String supplierID = jTextField2.getText();
+        int userID = Integer.parseInt(jLabel3.getText());
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+        String value = jLabel23.getText();
+        
+        final String fromEmail = "manulapansilu500@gmail.com";
+        final String appPassword = "cyyq hsam dnzq aqtb"; //generated app password ek danna google account eken aragena
+        final String toEmail = supplierEmail;
+        
+        Properties props = new Properties();
+        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.port", "587");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+
+        Session session = Session.getInstance(props, new Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(fromEmail, appPassword);
+            }
+        });
+
+        try {
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(fromEmail));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
+            message.setSubject("Add stock from your Company");
+            message.setText("GRN ID - " + grnID + 
+                    ", Supplier ID - " + supplierID + 
+                    ", Employee ID - " + userID + 
+                    ", Stock Price - RS" + value);
+
+            Transport.send(message);
+           JOptionPane.showMessageDialog(this, "Email sent successfully!", "Done", JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    
+    }
+    
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
         reset();
         genarateGRNId();
