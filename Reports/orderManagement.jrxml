@@ -1,0 +1,133 @@
+<!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 7.0.0-b478feaa9aab4375eba71de77b4ca138ad2f62aa  -->
+<jasperReport name="orderManagement" language="java" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="e57449eb-077e-428b-87f7-2417d890fb0b">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="DataAdapter.jrdax"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<parameter name="Parameter1" class="java.lang.String"/>
+	<parameter name="Parameter2" class="java.lang.String"/>
+	<parameter name="Parameter3" class="java.lang.String"/>
+	<query language="sql"><![CDATA[SELECT * FROM `order`]]></query>
+	<field name="id" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.name" value="id"/>
+		<property name="com.jaspersoft.studio.field.label" value="id"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="order"/>
+	</field>
+	<field name="qty" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="qty"/>
+		<property name="com.jaspersoft.studio.field.label" value="qty"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="order"/>
+	</field>
+	<field name="order_date" class="java.sql.Date">
+		<property name="com.jaspersoft.studio.field.name" value="order_date"/>
+		<property name="com.jaspersoft.studio.field.label" value="order_date"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="order"/>
+	</field>
+	<field name="arried_date" class="java.sql.Date">
+		<property name="com.jaspersoft.studio.field.name" value="arried_date"/>
+		<property name="com.jaspersoft.studio.field.label" value="arried_date"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="order"/>
+	</field>
+	<field name="customer_mobile" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="customer_mobile"/>
+		<property name="com.jaspersoft.studio.field.label" value="customer_mobile"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="order"/>
+	</field>
+	<field name="product_id" class="java.lang.Long">
+		<property name="com.jaspersoft.studio.field.name" value="product_id"/>
+		<property name="com.jaspersoft.studio.field.label" value="product_id"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="order"/>
+	</field>
+	<field name="order_status_id" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.name" value="order_status_id"/>
+		<property name="com.jaspersoft.studio.field.label" value="order_status_id"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="order"/>
+	</field>
+	<variable name="order_date1" resetType="Column" calculation="Count" class="java.lang.Integer">
+		<expression><![CDATA[$F{order_date}]]></expression>
+	</variable>
+	<background splitType="Stretch"/>
+	<title height="88" splitType="Stretch">
+		<element kind="staticText" uuid="368c52db-f974-457e-b752-f0a75b9ddbc9" x="150" y="10" width="259" height="30" fontSize="19.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Order Management Details]]></text>
+		</element>
+		<element kind="staticText" uuid="89c742fc-1e31-4656-95e7-98a82143b695" x="420" y="52" width="60" height="18" fontSize="11.0">
+			<text><![CDATA[Date:]]></text>
+		</element>
+		<element kind="textField" uuid="c04b567b-5c5b-4450-929b-deedf26c71e3" x="480" y="52" width="80" height="18">
+			<expression><![CDATA[$P{Parameter3}]]></expression>
+		</element>
+	</title>
+	<pageHeader height="67" splitType="Stretch">
+		<element kind="staticText" uuid="a1e548da-dc74-4f27-8a03-525f74821c06" x="10" y="10" width="100" height="17" fontSize="11.0">
+			<text><![CDATA[Report Name:]]></text>
+		</element>
+		<element kind="staticText" uuid="583983e3-d9c6-4d91-8891-a1f23ccc226f" x="10" y="27" width="100" height="20" fontSize="11.0">
+			<text><![CDATA[Report Type:]]></text>
+		</element>
+		<element kind="textField" uuid="69269ab7-e856-4313-8a56-96eb2693fca8" x="110" y="10" width="100" height="17">
+			<expression><![CDATA[$P{Parameter1}]]></expression>
+		</element>
+		<element kind="textField" uuid="7d67ea35-77cf-4f3f-825e-3337c44f1b26" x="110" y="27" width="100" height="20">
+			<expression><![CDATA[$P{Parameter2}]]></expression>
+		</element>
+	</pageHeader>
+	<columnHeader height="60" splitType="Stretch">
+		<element kind="staticText" uuid="20a568ac-cc8d-41a0-8587-04ea72884ee3" x="0" y="0" width="95" height="30" fontName="Verdana" fontSize="10.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Product Name]]></text>
+			<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="dd0ec92c-7403-4157-9670-a976a6688c35"/>
+		</element>
+		<element kind="staticText" uuid="80b15b03-8573-4762-8220-7dbb54b29367" x="95" y="0" width="92" height="30" fontName="Verdana" fontSize="10.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Quantity]]></text>
+			<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="e92d4695-4763-4475-89a3-1e94ef9c3814"/>
+		</element>
+		<element kind="staticText" uuid="dc750c48-84c7-4d82-85f5-53720ffe4943" x="187" y="0" width="92" height="30" fontName="Verdana" fontSize="10.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Order Date]]></text>
+			<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="4bf6354e-2671-4121-aa8c-474530a04a87"/>
+		</element>
+		<element kind="staticText" uuid="e53e7488-046f-4038-b5e2-a8bfffe538c4" x="279" y="0" width="92" height="30" fontName="Verdana" fontSize="10.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Arried Date]]></text>
+			<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="5e9528ad-da58-4e12-83e3-cccc36817131"/>
+		</element>
+		<element kind="staticText" uuid="2f81341b-6d5b-4212-bb43-94b7a1499e8f" x="371" y="0" width="92" height="30" fontName="Verdana" fontSize="10.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Customer Mobile]]></text>
+			<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="1d6f2506-ca7b-4cc4-9991-5d8a4f2e081f"/>
+		</element>
+		<element kind="staticText" uuid="2b7988ec-48c9-4fe2-b43c-0241708e31b0" x="463" y="0" width="92" height="30" fontName="Verdana" fontSize="10.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Status]]></text>
+			<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="c747fd7f-2b90-4f51-954d-775d779111d9"/>
+		</element>
+		<element kind="textField" uuid="f5f1f20f-5f65-4173-aac9-614abb8971ad" x="95" y="30" width="92" height="30" hTextAlign="Center" vTextAlign="Middle">
+			<expression><![CDATA[$F{qty}]]></expression>
+		</element>
+		<element kind="textField" uuid="cc970c2c-a214-464a-ba4b-0d649d48bfac" x="187" y="30" width="92" height="30" hTextAlign="Center" vTextAlign="Middle">
+			<expression><![CDATA[$F{order_date}]]></expression>
+		</element>
+		<element kind="textField" uuid="32e4f250-a0e9-4f4f-9e2b-bcfdb4a12bad" x="279" y="30" width="92" height="30" hTextAlign="Center" vTextAlign="Middle">
+			<expression><![CDATA[$F{arried_date}]]></expression>
+		</element>
+		<element kind="textField" uuid="c525b48e-da8f-428a-95a2-b1f0410c6913" x="371" y="30" width="92" height="30" hTextAlign="Center" vTextAlign="Middle">
+			<expression><![CDATA[$F{customer_mobile}]]></expression>
+		</element>
+		<element kind="textField" uuid="c9867405-bcec-4911-a87b-022348267315" x="463" y="30" width="92" height="30" hTextAlign="Center" vTextAlign="Middle">
+			<expression><![CDATA[$F{order_status_id}]]></expression>
+		</element>
+		<element kind="textField" uuid="a1942a26-b00c-48f9-b8c6-a634586f6c28" x="0" y="30" width="94" height="30" hTextAlign="Center" vTextAlign="Middle">
+			<expression><![CDATA[$F{product_id}]]></expression>
+		</element>
+	</columnHeader>
+	<detail>
+		<band height="30" splitType="Stretch"/>
+	</detail>
+	<columnFooter height="45" splitType="Stretch"/>
+	<pageFooter height="61" splitType="Stretch">
+		<element kind="staticText" uuid="a34bf872-88bb-4e1a-9891-36eabc6a4d2e" x="409" y="0" width="100" height="20" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[.....................................]]></text>
+		</element>
+		<element kind="staticText" uuid="517c363f-a3d0-4473-901d-5ae5fcec0339" x="409" y="20" width="100" height="20" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Signature]]></text>
+		</element>
+		<element kind="staticText" uuid="ea9f8ab2-fabd-4266-83f2-707b7eeb12af" x="180" y="40" width="198" height="20" fontSize="11.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Developed By CODE INVARDERS]]></text>
+		</element>
+	</pageFooter>
+	<summary height="29" splitType="Stretch"/>
+</jasperReport>

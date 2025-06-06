@@ -1,0 +1,96 @@
+<!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 7.0.0-b478feaa9aab4375eba71de77b4ca138ad2f62aa  -->
+<jasperReport name="cashSheet" language="java" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="62f0ffe3-7574-42ce-9497-9d2f34ade87b">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="DataAdapter.jrdax"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<parameter name="Parameter1" class="java.lang.String"/>
+	<parameter name="Parameter2" class="java.lang.String"/>
+	<parameter name="Parameter3" class="java.lang.String"/>
+	<query language="sql"><![CDATA[SELECT `date`, `type_id`, `amount` FROM `homeowners`.accounting_entries]]></query>
+	<field name="date" class="java.sql.Date">
+		<property name="com.jaspersoft.studio.field.name" value="date"/>
+		<property name="com.jaspersoft.studio.field.label" value="date"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="accounting_entries"/>
+	</field>
+	<field name="type_id" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.name" value="type_id"/>
+		<property name="com.jaspersoft.studio.field.label" value="type_id"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="accounting_entries"/>
+	</field>
+	<field name="amount" class="java.lang.Double">
+		<property name="com.jaspersoft.studio.field.name" value="amount"/>
+		<property name="com.jaspersoft.studio.field.label" value="amount"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="accounting_entries"/>
+	</field>
+	<background splitType="Stretch"/>
+	<title height="80" splitType="Stretch">
+		<element kind="staticText" uuid="cae837dc-5fda-42dc-a06b-6a9d59db9e3b" x="130" y="10" width="300" height="30" fontSize="19.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Cash Flow Statement Report]]></text>
+		</element>
+		<element kind="staticText" uuid="cd146d86-94ee-4968-8380-4aa35601f34d" x="420" y="50" width="60" height="20" fontSize="11.0">
+			<text><![CDATA[Date:]]></text>
+		</element>
+		<element kind="textField" uuid="d89e3d0d-3aa8-49fe-a366-93f0db48cc48" x="480" y="50" width="74" height="20">
+			<expression><![CDATA[$P{Parameter3}]]></expression>
+		</element>
+		<element kind="image" uuid="6934ef10-ab98-4970-a38d-28471a7ebd0c" x="40" y="10" width="60" height="50">
+			<expression><![CDATA["C:/Users/Kamaj/Downloads/38928831-e742-425d-9572-539e4b9d9a20.jpg"]]></expression>
+		</element>
+	</title>
+	<pageHeader height="63" splitType="Stretch">
+		<element kind="staticText" uuid="d0b1c185-f7c3-493d-a060-ad7704962f58" x="0" y="10" width="80" height="22" fontSize="11.0">
+			<text><![CDATA[Report Name:]]></text>
+		</element>
+		<element kind="staticText" uuid="257e9c22-381b-4b5f-bce2-5f2498eaa0c5" x="0" y="32" width="80" height="22" fontSize="11.0">
+			<text><![CDATA[Report Type:]]></text>
+		</element>
+		<element kind="textField" uuid="608f2b32-1ad2-43b5-8db8-147a4aea23a9" x="80" y="10" width="100" height="22">
+			<expression><![CDATA[$P{Parameter1}]]></expression>
+		</element>
+		<element kind="textField" uuid="00635b32-f13f-4368-a3b4-312519b291e8" x="80" y="32" width="100" height="22">
+			<expression><![CDATA[$P{Parameter2}]]></expression>
+		</element>
+	</pageHeader>
+	<columnHeader height="29" splitType="Stretch">
+		<element kind="staticText" uuid="18f50834-0b19-41b1-8fc6-7bd74f7c2102" mode="Opaque" x="0" y="0" width="180" height="29" forecolor="#FFFFFF" backcolor="#2175FC" fontName="Verdana" fontSize="10.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Date]]></text>
+			<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="cfa9ce58-34c3-4e06-822c-c4a33c7a9a9c"/>
+		</element>
+		<element kind="staticText" uuid="66a7b1e2-4735-49bf-a2be-599871c6a990" mode="Opaque" x="180" y="0" width="190" height="29" forecolor="#FFFFFF" backcolor="#2175FC" fontName="Verdana" fontSize="10.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Type]]></text>
+			<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="3c4cd02b-3e08-4a6b-a4b6-56ca19398921"/>
+		</element>
+		<element kind="staticText" uuid="94ac2d97-dcc3-401c-8351-342df96bdd19" mode="Opaque" x="370" y="0" width="184" height="29" forecolor="#FFFFFF" backcolor="#2175FC" fontName="Verdana" fontSize="10.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Amount]]></text>
+			<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="6f581e7e-bf13-45a9-b218-cb7e28686835"/>
+		</element>
+	</columnHeader>
+	<detail>
+		<band height="22" splitType="Stretch">
+			<element kind="textField" uuid="c1477123-9e79-4568-b051-37cfec33b5fd" x="0" y="0" width="180" height="22" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$F{date}]]></expression>
+				<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="0605dc16-4a86-4a02-a547-410cdaea9349"/>
+			</element>
+			<element kind="textField" uuid="00b19984-c471-469b-83f1-885a90ae8154" x="180" y="0" width="190" height="22" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$F{type_id}]]></expression>
+				<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="ec44fe1d-2fb5-4732-b6d1-891abf3d728a"/>
+			</element>
+			<element kind="textField" uuid="795f2247-2cdb-4145-9c5d-1503708c6e14" x="370" y="0" width="184" height="22" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$F{amount}]]></expression>
+				<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="4f35be53-02c1-43a3-9122-893b2cafb87a"/>
+			</element>
+		</band>
+	</detail>
+	<columnFooter height="45" splitType="Stretch"/>
+	<pageFooter height="72" splitType="Stretch">
+		<element kind="staticText" uuid="10155bdc-82cf-4b55-8f08-6e4782e9d863" x="400" y="0" width="100" height="20">
+			<text><![CDATA[.....................................]]></text>
+		</element>
+		<element kind="staticText" uuid="5e517200-2db1-4069-b48d-bd3443b87d49" x="400" y="20" width="100" height="20" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Signature]]></text>
+		</element>
+		<element kind="staticText" uuid="15b0e5be-9c36-4ae8-8d1f-9ae3c89e9ed7" x="180" y="50" width="200" height="22" fontSize="11.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Developed By CODE INVARDERS]]></text>
+		</element>
+	</pageFooter>
+	<summary height="42" splitType="Stretch"/>
+</jasperReport>

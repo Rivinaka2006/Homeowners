@@ -1,0 +1,140 @@
+<!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 7.0.0-b478feaa9aab4375eba71de77b4ca138ad2f62aa  -->
+<jasperReport name="Blank_A4_Landscape" language="java" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="61a332b5-550c-46b1-b820-4d32165c11e2">
+	<parameter name="Parameter1" class="java.lang.String"/>
+	<parameter name="Parameter2" class="java.lang.String"/>
+	<parameter name="Parameter3" class="java.lang.String"/>
+	<parameter name="Parameter4" class="java.lang.String"/>
+	<parameter name="Parameter5" class="java.lang.String"/>
+	<parameter name="Parameter6" class="java.lang.String"/>
+	<parameter name="Parameter7" class="java.lang.String"/>
+	<parameter name="Parameter8" class="java.lang.String"/>
+	<parameter name="Parameter9" class="java.lang.String"/>
+	<query language="sql"><![CDATA[]]></query>
+	<field name="COLUMN_1" class="java.lang.String"/>
+	<field name="COLUMN_2" class="java.lang.String"/>
+	<field name="COLUMN_3" class="java.lang.String"/>
+	<field name="COLUMN_4" class="java.lang.String"/>
+	<field name="COLUMN_7" class="java.lang.String"/>
+	<title height="146" splitType="Stretch">
+		<element kind="staticText" uuid="41aa480e-fbfe-4f76-8c01-e1aaf9f0ece1" x="270" y="10" width="240" height="56" forecolor="#ED4C37" fontName="Verdana" fontSize="29.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Homeowners]]></text>
+		</element>
+		<element kind="staticText" uuid="1a71115f-f75d-45fa-8eca-a171fc1664ab" x="240" y="80" width="300" height="24" forecolor="#1648F0" fontName="Verdana" fontSize="12.0" italic="true" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Contact - 0112000102 / 0774806416]]></text>
+		</element>
+		<element kind="staticText" uuid="9b1a18de-acd5-4e7e-ac15-ddc3f1c3d33b" x="190" y="120" width="420" height="20" forecolor="#1648F0" fontName="Verdana" fontSize="12.0" italic="true" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Address - No 37, Havelock Road, Colombo 05, Sri Lanka]]></text>
+		</element>
+		<element kind="staticText" uuid="9aeb519d-a7a3-45bb-bc56-c15a5b7129b4" x="0" y="0" width="80" height="30" fontName="Verdana" fontSize="10.0" bold="true" vTextAlign="Middle">
+			<text><![CDATA[Invoice]]></text>
+		</element>
+		<element kind="staticText" uuid="99af2434-52a1-40ef-8a63-8c69d34d284f" x="0" y="30" width="80" height="30" fontName="Verdana" fontSize="10.0" bold="true" vTextAlign="Middle">
+			<text><![CDATA[Customer]]></text>
+		</element>
+		<element kind="staticText" uuid="a19e38e7-9176-4848-98e7-a895f123aabf" x="0" y="60" width="80" height="30" fontName="Verdana" fontSize="10.0" bold="true" vTextAlign="Middle">
+			<text><![CDATA[Employee]]></text>
+		</element>
+		<element kind="staticText" uuid="c53d9e21-489d-4072-97a5-ccf3a276ccba" x="0" y="90" width="80" height="30" fontName="Verdana" fontSize="10.0" bold="true" vTextAlign="Middle">
+			<text><![CDATA[Date & Time]]></text>
+		</element>
+		<element kind="textField" uuid="c8ed19cb-eadd-48a2-96bb-5897b48eaa4b" x="80" y="0" width="100" height="30" fontSize="10.0" bold="true" hTextAlign="Left" vTextAlign="Middle">
+			<expression><![CDATA[$P{Parameter6}]]></expression>
+		</element>
+		<element kind="textField" uuid="a6ec7b2e-c4f9-44ad-bfeb-95dc1e6d385e" x="80" y="30" width="100" height="30" fontSize="10.0" bold="true" hTextAlign="Left" vTextAlign="Middle">
+			<expression><![CDATA[$P{Parameter7}]]></expression>
+		</element>
+		<element kind="textField" uuid="bfa893dd-01c2-4700-95de-15120db2e9ce" x="80" y="60" width="100" height="30" fontSize="10.0" bold="true" hTextAlign="Left" vTextAlign="Middle">
+			<expression><![CDATA[$P{Parameter8}]]></expression>
+		</element>
+		<element kind="textField" uuid="ed787cfd-b997-4ec9-a449-9f701b8fbbae" x="80" y="90" width="100" height="30" fontSize="10.0" bold="true" hTextAlign="Left" vTextAlign="Middle">
+			<expression><![CDATA[$P{Parameter9}]]></expression>
+		</element>
+	</title>
+	<columnHeader height="30" splitType="Stretch">
+		<element kind="staticText" uuid="bfb9c5db-e83a-4c01-8939-fef7c2528a12" x="0" y="0" width="80" height="30" fontName="Verdana" fontSize="12.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[#]]></text>
+		</element>
+		<element kind="staticText" uuid="32a1594e-a065-485e-9edc-ec0009f64f6c" x="80" y="0" width="160" height="30" fontName="Verdana" fontSize="12.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Brand]]></text>
+		</element>
+		<element kind="staticText" uuid="dde99e42-eb7a-44a1-abf9-f43cd11bd13d" x="240" y="0" width="200" height="30" fontName="Verdana" fontSize="12.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Product]]></text>
+		</element>
+		<element kind="staticText" uuid="7fb456af-cc6a-4ce4-b1e6-d50f71556d53" x="440" y="0" width="90" height="30" fontName="Verdana" fontSize="12.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Quantity]]></text>
+		</element>
+		<element kind="staticText" uuid="e0e6b9db-7181-4b64-8424-32db3d9b233d" x="530" y="0" width="130" height="30" fontName="Verdana" fontSize="12.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Unit Price]]></text>
+		</element>
+		<element kind="staticText" uuid="f1b9cc01-31d2-45c8-9a7a-455fe8b3443b" x="660" y="0" width="140" height="30" fontName="Verdana" fontSize="12.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Total]]></text>
+		</element>
+	</columnHeader>
+	<detail>
+		<band height="30" splitType="Stretch">
+			<element kind="textField" uuid="f8eb734e-43d7-4954-b358-5ddb0eaf6ae5" x="0" y="0" width="80" height="30" fontSize="9.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$V{PAGE_NUMBER}]]></expression>
+			</element>
+			<element kind="textField" uuid="989af8db-be3b-4649-8740-ad698ec0025f" x="80" y="0" width="160" height="30" fontSize="9.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$F{COLUMN_1}]]></expression>
+				<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="acd046da-b648-45bc-b146-d7e10176e47f"/>
+			</element>
+			<element kind="textField" uuid="74de05a7-0387-4826-9ab4-cc0c4de3e1a1" x="240" y="0" width="200" height="30" fontSize="9.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$F{COLUMN_2}]]></expression>
+				<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="4ef3d0ac-4a54-4fc0-82da-bbfb0b5e1813"/>
+			</element>
+			<element kind="textField" uuid="9006702d-5883-4cc8-9b56-4ef8a0376af5" x="440" y="0" width="90" height="30" fontSize="9.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$F{COLUMN_3}]]></expression>
+				<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="f97838b5-cd68-43f8-ad4f-6ff1778f4815"/>
+			</element>
+			<element kind="textField" uuid="dcce10ab-57c1-4233-887c-d5d158390cfe" x="530" y="0" width="130" height="30" fontSize="9.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$F{COLUMN_4}]]></expression>
+				<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="d563f93d-0422-4be4-9eb9-bc7a0660a9bd"/>
+			</element>
+			<element kind="textField" uuid="d06aa090-267d-4a82-926b-648171a6f85e" x="660" y="0" width="140" height="30" fontSize="9.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$F{COLUMN_7}]]></expression>
+				<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="5ec4a27b-678b-494c-ab13-822e0cadf035"/>
+			</element>
+		</band>
+	</detail>
+	<columnFooter height="161" splitType="Stretch">
+		<element kind="textField" uuid="95148568-61f6-4f1e-81eb-5f0c3483803b" x="700" y="10" width="100" height="30" fontSize="11.0" bold="true" hTextAlign="Right" vTextAlign="Middle">
+			<expression><![CDATA[$P{Parameter1}]]></expression>
+		</element>
+		<element kind="textField" uuid="986ac025-1ae7-452f-be84-e242f0e32ba0" x="700" y="40" width="100" height="30" fontSize="11.0" bold="true" hTextAlign="Right" vTextAlign="Middle">
+			<expression><![CDATA[$P{Parameter2}]]></expression>
+		</element>
+		<element kind="textField" uuid="de2c7174-dc39-4b06-9345-e0dd61dc0557" x="700" y="70" width="100" height="30" fontSize="11.0" bold="true" hTextAlign="Right" vTextAlign="Middle">
+			<expression><![CDATA[$P{Parameter3}]]></expression>
+		</element>
+		<element kind="textField" uuid="422144b6-24b1-4811-9b2b-c41eb58c22c8" x="700" y="100" width="100" height="30" fontSize="11.0" bold="true" hTextAlign="Right" vTextAlign="Middle">
+			<expression><![CDATA[$P{Parameter4}]]></expression>
+		</element>
+		<element kind="textField" uuid="9d3c2839-f474-453f-a46c-e4af48ece1ef" x="700" y="130" width="100" height="30" fontSize="11.0" bold="true" hTextAlign="Right" vTextAlign="Middle">
+			<expression><![CDATA[$P{Parameter5}]]></expression>
+		</element>
+		<element kind="staticText" uuid="6452632c-4495-4255-89ec-19956de5fd99" x="560" y="10" width="140" height="30" fontName="Verdana" fontSize="14.0" bold="true">
+			<text><![CDATA[Total]]></text>
+		</element>
+		<element kind="staticText" uuid="0e98a033-5c83-4b42-9419-754860d3237f" x="560" y="40" width="140" height="30" fontName="Verdana" fontSize="14.0" bold="true">
+			<text><![CDATA[Discount]]></text>
+		</element>
+		<element kind="staticText" uuid="2268326f-8f2e-4aec-b259-2d1d302f1f2f" x="560" y="70" width="140" height="30" fontName="Verdana" fontSize="14.0" bold="true">
+			<text><![CDATA[Payment Method]]></text>
+		</element>
+		<element kind="staticText" uuid="41ce908f-7df0-469f-9799-cdf68f237790" x="560" y="100" width="140" height="30" fontName="Verdana" fontSize="14.0" bold="true">
+			<text><![CDATA[Payment ]]></text>
+		</element>
+		<element kind="staticText" uuid="2a8c7249-1b5a-4c41-9dc1-697e57ac96b9" x="560" y="130" width="140" height="30" fontName="Verdana" fontSize="14.0" bold="true">
+			<text><![CDATA[Balance]]></text>
+		</element>
+	</columnFooter>
+	<pageFooter height="82">
+		<element kind="staticText" uuid="2e4a3632-2e58-47b4-baba-097034af1ddf" x="210" y="10" width="360" height="31" forecolor="#ED4C37" fontName="Verdana" fontSize="16.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Thank You ! Come Again]]></text>
+		</element>
+		<element kind="staticText" uuid="fe1161aa-6ce9-4bcc-a1d7-9a099648589d" x="140" y="42" width="520" height="31" forecolor="#080100" fontName="Verdana" fontSize="11.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[Software Developed By : Java Institute for Advanced Technology, Sri Lanka]]></text>
+		</element>
+	</pageFooter>
+</jasperReport>
